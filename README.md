@@ -1,93 +1,81 @@
 <p align="center">
-  <img src="assets/t-rax.png" width="160" alt="T-rax" />
+  <img src="src-tauri/icons/128x128@2x.png" width="128" alt="T-rax" />
 </p>
 
-<h1 align="center">T-rax</h1>
+# T-rax — versão Linux
 
-<p align="center">
-  <b>Terminal, editor, git, agentes de IA e preview web — numa janela só.</b><br/>
-  Leve, rápido e com dentes afiados. 🦖
-</p>
+Código-fonte da versão Linux do T-rax: um workspace de desenvolvimento "terminal-first" com IA,
+feito com Tauri 2 (Rust) + React 19. Para baixar o app pronto, veja a branch `main` ou a página de
+[Releases](https://github.com/vtQuadros/Clone-Terax/releases).
 
-<p align="center">
-  <a href="https://github.com/vtQuadros/Clone-Terax/releases/latest">Downloads</a> ·
-  <a href="#recursos">Recursos</a> ·
-  <a href="#instalação">Instalação</a> ·
-  <a href="#branches">Branches</a>
-</p>
+## Rodando a partir do código
 
----
-
-## O que é
-
-O **T-rax** é um workspace de desenvolvimento *terminal-first* e *AI-native*: você abre uma pasta e tem
-terminal, editor de código, controle de versão, um agente de IA que lê e altera o projeto (sempre com
-diff para revisar antes) e o preview do seu app rodando, tudo lado a lado.
-
-O nome é uma brincadeira com o **T-REX** — e uma homenagem ao [Terax](https://terax.app/), projeto
-open source (Apache-2.0) que inspirou este. O T-rax foi reescrito do zero com Tauri 2 (Rust) + React,
-depois de estudar o Terax com a ferramenta de engenharia reversa [REA](https://github.com/morluto/rea)
-e o código aberto dele. Não é afiliado ao Terax.
-
-## Downloads
-
-| Sistema | Arquivo | Como instalar |
-| --- | --- | --- |
-| **Linux** — Debian, Ubuntu, Zorin, Mint | [`T-rax_0.1.0_amd64.deb`](https://github.com/vtQuadros/Clone-Terax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) | `sudo apt install ./T-rax_0.1.0_amd64.deb` |
-| **Linux** — qualquer distro | [`T-rax_0.1.0_amd64.AppImage`](https://github.com/vtQuadros/Clone-Terax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) | `chmod +x T-rax_0.1.0_amd64.AppImage` e execute |
-| **Windows** | em breve | — |
-| **macOS** | não planejado por enquanto | — |
-
-Todas as versões ficam em [Releases](https://github.com/vtQuadros/Clone-Terax/releases).
-
-## Recursos
-
-- **Terminal de verdade** — xterm.js com renderização WebGL, várias abas, PTY nativo, links clicáveis.
-- **Editor** — CodeMirror 6 com modo Vim, 8 temas, `Ctrl+S` para salvar e **autocomplete com IA** (Tab aceita).
-- **Explorer** — ícones Catppuccin, navegação por teclado, criar/renomear/apagar pelo menu de contexto.
-- **Busca** — no conteúdo de todo o projeto (texto ou regex, respeita `.gitignore`) e busca de arquivo por nome (`Ctrl+P`).
-- **Git** — stage/unstage/descartar por arquivo **ou por trecho (hunk)**, commit com `Ctrl+Enter`, push,
-  e um **grafo de commits** com branches, merges e tags.
-- **Agente de IA** — lê, procura, propõe edições (cada uma vira um **diff para você aceitar ou rejeitar**),
-  roda comandos (com sua aprovação), mantém um plano de tarefas e cria sub-agentes de pesquisa.
-- **Seus modelos, sua chave** — OpenAI, Anthropic, Groq, OpenRouter, ou **100% local** com LM Studio / Ollama.
-- **Memória por projeto** — um arquivo `TRAX.md` na raiz que o agente lê a cada conversa.
-- **Planos e tarefas** — lista de tarefas compartilhada entre você e o agente.
-- **Snippets** — prompts reutilizáveis chamados com `/nome` no chat.
-- **Preview web** — detecta servidores de dev (Vite, Next, Astro…) no terminal e abre numa aba.
-- **Temas** — 10 paletas, tema do editor independente, temas personalizados (exporta/importa JSON) e
-  imagem de fundo com opacidade e blur.
-- **Leve** — binário de ~8 MB, sem Electron, sem conta, sem telemetria.
-
-## Instalação
-
-### Linux (.deb)
+Pacotes do sistema (Debian/Ubuntu/Zorin):
 
 ```bash
-sudo apt install ./T-rax_0.1.0_amd64.deb
+sudo apt install -y pkg-config libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
 ```
 
-Depois procure **T-rax** no menu de aplicativos, ou rode `t-rax` no terminal. Para abrir direto numa
-pasta: `t-rax ~/meu-projeto`.
-
-### Linux (AppImage)
+Rust (via [rustup](https://rustup.rs)) e Node.js 22+, depois:
 
 ```bash
-chmod +x T-rax_0.1.0_amd64.AppImage
+npm install
+npm run tauri dev
 ```
+
+`npm run dev` sozinho abre só a interface no navegador, com um backend simulado (`src/dev/mockIpc.ts`).
+
+## Gerando os pacotes
 
 ```bash
-./T-rax_0.1.0_amd64.AppImage
+npm run tauri build
 ```
 
-### Configurando a IA
+Saída em `src-tauri/target/release/bundle/` (`.deb` e `.AppImage`). Para instalar o binário compilado
+só no seu usuário, com ícone e atalho no menu:
 
-Abra **Settings** (`Ctrl+,`) → **AI Providers**, escolha um provedor e cole sua chave. Para rodar sem
-internet, use **LM Studio** ou **Ollama** — nada sai da sua máquina.
+```bash
+scripts/install-linux.sh
+```
 
-### Janela vazia ao abrir?
+(`scripts/install-linux.sh --uninstall` remove.)
 
-Alguns sistemas têm caches de fontes incompatíveis que travam o WebKitGTK. Rode:
+## Estrutura
+
+```
+src/                 Frontend React
+  ai/                provedores (streaming), loop do agente + ferramentas, autocomplete
+  components/        painéis e views (terminal, editor, explorer, git, IA, preview…)
+  lib/               wrappers de IPC, stores (zustand), temas, diff e grafo de commits
+src-tauri/src/       Backend Rust
+  pty.rs             terminais (portable-pty, streaming por Channel)
+  fs.rs              arquivos, busca fuzzy e grep (respeita .gitignore)
+  git.rs             status, diff, stage por hunk, commit, push, log
+  shell.rs           comandos não interativos para o agente (com timeout)
+  ai.rs              proxy de streaming HTTP para os provedores de IA (cancelável)
+docs/analysis.md     como o Terax original foi analisado (REA + código aberto)
+```
+
+Testes do backend: `cd src-tauri && cargo test`.
+
+## Atalhos
+
+| Teclas | Ação |
+| --- | --- |
+| Ctrl+P | Ir para arquivo |
+| Ctrl+Shift+P | Paleta de comandos |
+| Ctrl+Shift+T / Ctrl+Shift+W | Novo terminal / fechar aba |
+| Ctrl+Tab, Ctrl+1…9 | Trocar de aba |
+| Ctrl+Shift+E / F / G / K | Explorer / Busca / Git / Tarefas |
+| Ctrl+B, Ctrl+I | Mostrar/ocultar barra lateral / painel do agente |
+| Ctrl+O, Ctrl+, | Abrir pasta / configurações |
+
+Dentro do terminal só os atalhos com Ctrl+Shift são capturados; os Ctrl simples vão para o shell.
+
+## Problemas conhecidos
+
+**Janela vazia (cinza) ao abrir.** O WebKitGTK trava se `~/.cache/fontconfig` tiver caches `cache-9`
+que são symlinks para `cache-12` (criados por apps com fontconfig mais novo). Correção:
 
 ```bash
 find ~/.cache/fontconfig -maxdepth 1 -type l -name '*.cache-*' -lname '*.cache-12' -delete
@@ -96,11 +84,3 @@ find ~/.cache/fontconfig -maxdepth 1 -type l -name '*.cache-*' -lname '*.cache-1
 ```bash
 fc-cache -f
 ```
-
-## Branches
-
-| Branch | Conteúdo |
-| --- | --- |
-| `main` | Esta página: apresentação e downloads |
-| [`Linux`](https://github.com/vtQuadros/Clone-Terax/tree/Linux) | Código-fonte da versão Linux (Tauri 2 + React) e instruções de build |
-| [`Windows`](https://github.com/vtQuadros/Clone-Terax/tree/Windows) | Versão Windows — em desenvolvimento |

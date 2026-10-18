@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-rax</title>
+  </head>
+  <body>
+    <script>
+      // Reports load-time failures to the Rust log before any module code runs.
+      (function () {
+        const send = (level, msg) => {
+          const message = String(msg).slice(0, 2000);
+          try {
+            window.__TAURI_INTERNALS__?.invoke("log_js", { level, message });
+          } catch {}
+          try {
+            if (location.port === "1420") fetch("/__log", { method: "POST", body: level + ": " + message });
+          } catch {}
+        };
+        send("info", "html loaded " + location.href);
+        window.addEventListener("error", (e) => send("error", (e.message || e) + " @ " + (e.filename || "") + ":" + (e.lineno || "")));
+        window.addEventListener("unhandledrejection", (e) => send("error", "unhandled: " + (e.reason && (e.reason.stack || e.reason))));
+        const orig = console.error;
+        console.error = (...a) => { send("console", a.join(" ")); orig.apply(console, a); };
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a1f"/>
+      <stop offset="1" stop-color="#0b120d"/>
+    </linearGradient>
+    <linearGradient id="dino" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8be08f"/>
+      <stop offset="1" stop-color="#3fae5a"/>
+    </linearGradient>
+  </defs>
+  <rect x="48" y="48" width="928" height="928" rx="210" fill="url(#bg)"/>
+  <rect x="50" y="50" width="924" height="924" rx="208" fill="none" stroke="#2f4a36" stroke-width="6"/>
+  <!-- T-rex head in profile, facing right, jaws open -->
+  <path fill="url(#dino)" d="
+    M 196 610
+    C 186 470 250 330 390 268
+    C 500 220 650 224 760 262
+    C 836 288 872 330 872 386
+    L 872 452
+    C 872 478 852 494 826 494
+    L 560 494
+    L 548 524
+    L 800 552
+    C 834 556 850 576 846 604
+    L 842 640
+    C 838 674 812 690 778 690
+    L 520 690
+    C 470 690 446 716 440 760
+    L 432 820
+    L 250 820
+    C 214 760 198 690 196 610 Z"/>
+  <!-- upper teeth -->
+  <path fill="#f4f1e6" d="M600 494 l18 34 l18 -34 Z M664 494 l18 34 l18 -34 Z M728 494 l18 34 l18 -34 Z M792 494 l16 30 l16 -30 Z"/>
+  <!-- lower teeth -->
+  <path fill="#f4f1e6" d="M620 552 l18 -30 l18 33 Z M684 559 l18 -30 l18 33 Z M748 566 l18 -30 l18 33 Z"/>
+  <!-- nostril and eye -->
+  <ellipse cx="818" cy="318" rx="16" ry="10" fill="#1b2a1f"/>
+  <circle cx="610" cy="352" r="38" fill="#0b120d"/>
+  <circle cx="622" cy="340" r="12" fill="#f4f1e6"/>
+  <!-- brow ridge -->
+  <path d="M556 300 Q 610 282 664 300" stroke="#2c7a40" stroke-width="22" fill="none" stroke-linecap="round"/>
+  <!-- terminal prompt on the cheek -->
+  <path d="M286 560 L346 610 L286 660" fill="none" stroke="#0b120d" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M376 676 H440" stroke="#0b120d" stroke-width="40" stroke-linecap="round"/>
+</svg>
