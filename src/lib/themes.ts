@@ -24,11 +24,11 @@ export const APP_THEMES: AppTheme[] = [
   {
     id: "t-rax-default",
     name: "T-rax Default",
-    editorTheme: "github-dark",
+    editorTheme: "t-rax",
     colors: {
-      bg: "#0d0d0f", panel: "#121214", elevated: "#1a1a1d", hover: "#202024", border: "#26262b",
-      fg: "#e6e6e8", muted: "#8b8b93", accent: "#fafafa", accentFg: "#0d0d0f",
-      red: "#ff6b6b", green: "#5ee38a", yellow: "#f5d76e", blue: "#6aa8ff", magenta: "#c792ea", cyan: "#5fd7d7",
+      bg: "#0b0d0c", panel: "#0e1110", elevated: "#121614", hover: "#1a1f1c", border: "#1e2421",
+      fg: "#e7ece9", muted: "#8b948f", accent: "#4ade80", accentFg: "#052e16",
+      red: "#f87171", green: "#4ade80", yellow: "#fbbf24", blue: "#60a5fa", magenta: "#c084fc", cyan: "#5eead4",
     },
   },
   {
@@ -129,9 +129,16 @@ export function findTheme(id: string, custom: AppTheme[] = []): AppTheme {
 
 export function applyTheme(t: AppTheme) {
   const root = document.documentElement;
-  for (const [k, v] of Object.entries(t.colors)) {
+  const c = t.colors;
+  for (const [k, v] of Object.entries(c)) {
     root.style.setProperty(`--c-${k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`, v);
   }
+  // Derived steps, so every palette (custom ones too) gets the full token set.
+  root.style.setProperty("--c-border-strong", mix(c.border, c.fg, 0.05));
+  root.style.setProperty("--c-fg-soft", mix(c.fg, c.bg, 0.14));
+  root.style.setProperty("--c-dim", mix(c.muted, c.bg, 0.12));
+  root.style.setProperty("--c-accent-soft", `${c.accent}1f`);
+  root.style.setProperty("--c-red-soft", `${c.red}1a`);
 }
 
 function mix(a: string, b: string, t: number) {
@@ -168,6 +175,7 @@ export function terminalTheme(t: AppTheme): ITheme {
 }
 
 export const EDITOR_THEMES = [
+  "t-rax",
   "github-dark",
   "github-light",
   "tokyo-night",

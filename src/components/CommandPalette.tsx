@@ -38,23 +38,28 @@ export function CommandPalette({ commands }: { commands: PaletteCommand[] }) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 bg-black/30" onMouseDown={close}>
+    <div className="fixed inset-0 z-40 bg-[#050706]/70 px-6 pt-[120px]" onMouseDown={close}>
       <Command
         shouldFilter={commandMode}
         filter={(value, search) => (value.toLowerCase().includes(search.slice(1).trim().toLowerCase()) ? 1 : 0)}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.key === "Escape" && close()}
-        className="mx-auto mt-[12vh] w-[min(620px,92vw)] overflow-hidden rounded-xl border border-border bg-panel shadow-2xl"
+        label="Command palette"
+        className="mx-auto w-full max-w-[600px] overflow-hidden rounded-xl border border-border-strong bg-panel"
       >
-        <Command.Input
-          autoFocus
-          value={q}
-          onValueChange={setQ}
-          placeholder="Search files by name, or type > for commands"
-          className="h-11 w-full border-b border-border bg-transparent px-4 text-[13px] outline-none placeholder:text-muted"
-        />
-        <Command.List className="max-h-[50vh] overflow-auto p-1">
-          <Command.Empty className="p-4 text-center text-[12px] text-muted">No results.</Command.Empty>
+        <div className="flex h-[52px] items-center gap-2.5 border-b border-border px-4">
+          <span aria-hidden className="font-mono text-[15px] font-semibold text-accent">›</span>
+          <Command.Input
+            autoFocus
+            value={q}
+            onValueChange={setQ}
+            placeholder="Search files, or type > for commands"
+            className="h-full flex-1 bg-transparent text-[15px] outline-none placeholder:text-dim focus-visible:outline-none"
+          />
+          <kbd className="rounded border border-border-strong px-1.5 py-px font-mono text-[11px] text-muted">esc</kbd>
+        </div>
+        <Command.List className="max-h-[50vh] overflow-auto p-1.5">
+          <Command.Empty className="p-4 text-center text-[13px] text-muted">No results.</Command.Empty>
           {commandMode
             ? [...commands, ...themeCmds].map((c) => (
                 <Command.Item
@@ -64,10 +69,10 @@ export function CommandPalette({ commands }: { commands: PaletteCommand[] }) {
                     close();
                     c.run();
                   }}
-                  className="flex cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[12.5px]"
+                  className="flex h-[38px] cursor-pointer items-center justify-between rounded-lg px-3 text-[13.5px] text-fg-soft data-[selected=true]:text-fg"
                 >
                   {c.label}
-                  {c.hint && <span className="text-[11px] text-muted">{c.hint}</span>}
+                  {c.hint && <span className="font-mono text-[11px] text-dim">{c.hint}</span>}
                 </Command.Item>
               ))
             : files.map((f) => (
@@ -78,14 +83,19 @@ export function CommandPalette({ commands }: { commands: PaletteCommand[] }) {
                     close();
                     useWorkspace.getState().openFile(f);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-[12.5px]"
+                  className="flex h-[38px] cursor-pointer items-center gap-2.5 rounded-lg px-3 text-[13.5px] text-fg-soft data-[selected=true]:text-fg"
                 >
                   <FileIcon name={basename(f)} size={14} />
                   <span>{basename(f)}</span>
-                  <span className="truncate text-[11px] text-muted">{relPath(root, f)}</span>
+                  <span className="truncate font-mono text-[11.5px] text-dim">{relPath(root, f)}</span>
                 </Command.Item>
               ))}
         </Command.List>
+        <div className="flex gap-4 border-t border-border px-4 py-2.5 font-mono text-[11px] text-dim">
+          <span>↑↓ navigate</span>
+          <span>⏎ open</span>
+          <span>{commandMode ? "commands" : "> for commands"}</span>
+        </div>
       </Command>
     </div>
   );

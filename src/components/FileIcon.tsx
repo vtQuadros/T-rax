@@ -1,5 +1,6 @@
 import catppuccin from "@iconify-json/catppuccin/icons.json";
 import { addCollection, Icon } from "@iconify/react";
+import { useSettings } from "@/lib/store";
 
 addCollection(catppuccin as Parameters<typeof addCollection>[0]);
 const ICONS = new Set(Object.keys(catppuccin.icons));
@@ -46,6 +47,18 @@ function iconFor(name: string, isDir: boolean, open: boolean) {
   return ext && ICONS.has(ext) ? ext : "file";
 }
 
+// Monochrome by default: shapes stay distinct, colour is reserved for status.
+const MONO = { filter: "grayscale(1) brightness(1.2)", opacity: 0.7 };
+
 export function FileIcon({ name, isDir = false, open = false, size = 16 }: { name: string; isDir?: boolean; open?: boolean; size?: number }) {
-  return <Icon icon={`catppuccin:${iconFor(name, isDir, open)}`} width={size} height={size} className="shrink-0" />;
+  const colored = useSettings((s) => s.coloredIcons);
+  return (
+    <Icon
+      icon={`catppuccin:${iconFor(name, isDir, open)}`}
+      width={size}
+      height={size}
+      className="shrink-0"
+      style={colored ? undefined : MONO}
+    />
+  );
 }

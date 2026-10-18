@@ -17,26 +17,36 @@
   --color-blue: var(--c-blue);
   --color-magenta: var(--c-magenta);
   --color-cyan: var(--c-cyan);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-border-strong: var(--c-border-strong);
+  --color-fg-soft: var(--c-fg-soft);
+  --color-dim: var(--c-dim);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-red-soft: var(--c-red-soft);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
 :root {
-  --c-bg: #0d0d0f;
-  --c-panel: #121214;
-  --c-elevated: #1a1a1d;
-  --c-hover: #202024;
-  --c-border: #26262b;
-  --c-fg: #e6e6e8;
-  --c-muted: #8b8b93;
-  --c-accent: #fafafa;
-  --c-accent-fg: #0d0d0f;
-  --c-red: #ff6b6b;
-  --c-green: #5ee38a;
-  --c-yellow: #f5d76e;
-  --c-blue: #6aa8ff;
-  --c-magenta: #c792ea;
-  --c-cyan: #5fd7d7;
+  --c-bg: #0b0d0c;
+  --c-panel: #0e1110;
+  --c-elevated: #121614;
+  --c-hover: #1a1f1c;
+  --c-border: #1e2421;
+  --c-border-strong: #252b28;
+  --c-fg: #e7ece9;
+  --c-fg-soft: #c9d1cc;
+  --c-muted: #8b948f;
+  --c-dim: #7a837e;
+  --c-accent: #4ade80;
+  --c-accent-fg: #052e16;
+  --c-accent-soft: #4ade801f;
+  --c-red: #f87171;
+  --c-red-soft: #f871711a;
+  --c-green: #4ade80;
+  --c-yellow: #fbbf24;
+  --c-blue: #60a5fa;
+  --c-magenta: #c084fc;
+  --c-cyan: #5eead4;
   color-scheme: dark;
 }
 
@@ -78,7 +88,7 @@ textarea,
 }
 
 .xterm {
-  padding: 8px 0 0 10px;
+  padding: 16px 0 0 20px;
   height: 100%;
 }
 .xterm .xterm-viewport {
@@ -143,6 +153,7 @@ textarea,
 [data-separator] {
   background: var(--c-border);
   width: 1px;
+  transition: background-color 0.2s ease;
 }
 [data-separator="hover"],
 [data-separator="active"] {
@@ -158,4 +169,54 @@ textarea,
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@layer base {
+/* Interaction: colour-only motion, a visible focus ring, nothing when reduced. */
+button,
+a,
+[role="tab"],
+.row {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline-offset: 0;
+}
+::selection {
+  background: var(--c-accent-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+}
+
+/* Section label: mono, small caps-like tracking (panel headers, group titles). */
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

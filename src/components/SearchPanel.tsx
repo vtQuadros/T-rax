@@ -45,9 +45,12 @@ export function SearchPanel() {
   return (
     <div className="flex h-full flex-col">
       <PanelHeader title="Search" />
-      <div className="space-y-1.5 border-b border-border p-2">
+      <div className="flex flex-col gap-2 px-3 pb-3">
         <div className="relative">
-          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in files" className={`${inputCls} pr-14`} />
+          <label htmlFor="grep-q" className="sr-only">
+            Search in files
+          </label>
+          <input id="grep-q" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in files" className={`${inputCls} pr-16`} />
           <div className="absolute top-1 right-1 flex">
             <IconBtn title="Match case" active={cs} onClick={() => setCs(!cs)}>
               <CaseSensitive size={14} />
@@ -57,25 +60,25 @@ export function SearchPanel() {
             </IconBtn>
           </div>
         </div>
-        <div className="px-0.5 text-[11px] text-muted">
+        <div className="px-0.5 font-mono text-[11px] text-dim">
           {error ? <span className="text-red">{error}</span> : busy ? "Searching…" : q && `${results.length} results in ${grouped.length} files`}
         </div>
       </div>
-      <div className="flex-1 overflow-auto py-1">
+      <div className="flex-1 overflow-auto px-2 pb-2">
         {grouped.map(([path, matches]) => (
-          <div key={path} className="mb-1">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 text-[12px]" title={path}>
+          <div key={path} className="mb-2">
+            <div className="flex h-7 items-center gap-2 px-2 text-[13px]" title={path}>
               <FileIcon name={basename(path)} size={14} />
               <span className="truncate font-medium">{basename(path)}</span>
-              <span className="truncate text-[11px] text-muted">{relPath(root, path)}</span>
+              <span className="truncate font-mono text-[11px] text-dim">{relPath(root, path)}</span>
             </div>
             {matches.map((m) => (
               <button
                 key={m.line}
                 onClick={() => openFile(m.path, m.line)}
-                className="flex w-full gap-2 py-0.5 pr-2 pl-7 text-left font-mono text-[11.5px] text-fg/80 hover:bg-hover"
+                className="row flex h-7 w-full items-center gap-2 rounded-md pr-2 pl-6 text-left font-mono text-[12px] text-fg-soft hover:bg-elevated"
               >
-                <span className="w-7 shrink-0 text-right text-muted">{m.line}</span>
+                <span className="w-8 shrink-0 text-right text-dim">{m.line}</span>
                 <span className="truncate">{m.text}</span>
               </button>
             ))}

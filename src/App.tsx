@@ -1,5 +1,5 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { Bot, Files, FolderOpen, GitBranch, ListTodo, Search, Settings, SquareTerminal } from "lucide-react";
+import { Bot, Files, FolderOpen, GitBranch, ListTodo, Search, SlidersHorizontal, SquareTerminal } from "lucide-react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
@@ -19,6 +19,7 @@ import { StatusBar } from "./components/StatusBar";
 import { TabBar } from "./components/TabBar";
 import { TasksPanel } from "./components/TasksPanel";
 import { TerminalView } from "./components/TerminalView";
+import { Kbd, Logo } from "./components/ui";
 import { basename, ipc } from "./lib/ipc";
 import { type SidebarPanel, type Tab, useSettings, useWorkspace } from "./lib/store";
 import { applyTheme, findTheme } from "./lib/themes";
@@ -110,34 +111,46 @@ const RAIL: { id: Exclude<SidebarPanel, null>; icon: typeof Files; label: string
   { id: "tasks", icon: ListTodo, label: "Plans & Tasks (Ctrl+Shift+K)" },
 ];
 
+function RailButton({ label, active, onClick, badge, children }: { label: string; active?: boolean; onClick: () => void; badge?: number; children: React.ReactNode }) {
+  return (
+    <button
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={`relative grid h-9 w-9 place-items-center rounded-lg ${active ? "bg-hover text-fg" : "text-muted hover:bg-hover hover:text-fg"}`}
+    >
+      {active && <span className="absolute top-[9px] -left-2 h-[18px] w-0.5 rounded bg-accent" />}
+      {children}
+      {!!badge && (
+        <span className="absolute top-1 right-0.5 h-3.5 min-w-3.5 rounded-full bg-accent px-[3px] text-center font-mono text-[9px] leading-[14px] font-semibold text-accent-fg">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function Rail() {
   const sidebar = useWorkspace((s) => s.sidebar);
   const toggle = useWorkspace((s) => s.toggleSidebar);
+  const changes = useWorkspace((s) => s.git?.changes.length ?? 0);
   return (
-    <div className="flex w-11 shrink-0 flex-col items-center gap-1 border-r border-border bg-panel py-2">
+    <nav aria-label="Panels" className="flex w-[52px] shrink-0 flex-col items-center gap-1 border-r border-border bg-bg py-3">
+      <Logo size={28} className="mb-3.5" />
       {RAIL.map(({ id, icon: Icon, label }) => (
-        <button
-          key={id}
-          title={label}
-          onClick={() => toggle(id)}
-          className={`relative grid h-9 w-9 place-items-center rounded-md ${sidebar === id ? "text-fg" : "text-muted hover:text-fg"}`}
-        >
-          {sidebar === id && <span className="absolute top-2 bottom-2 -left-1 w-0.5 rounded bg-accent" />}
+        <RailButton key={id} label={label} active={sidebar === id} onClick={() => toggle(id)} badge={id === "git" ? changes : 0}>
           <Icon size={18} strokeWidth={1.6} />
-        </button>
+        </RailButton>
       ))}
       <div className="flex-1" />
-      <button title="Open Folder (Ctrl+O)" onClick={pickFolder} className="grid h-9 w-9 place-items-center text-muted hover:text-fg">
-        <FolderOpen size={17} strokeWidth={1.6} />
-      </button>
-      <button
-        title="Settings (Ctrl+,)"
-        onClick={() => useWorkspace.getState().set({ settingsOpen: true })}
-        className="grid h-9 w-9 place-items-center text-muted hover:text-fg"
-      >
-        <Settings size={17} strokeWidth={1.6} />
-      </button>
-    </div>
+      <RailButton label="Open Folder (Ctrl+O)" onClick={pickFolder}>
+        <FolderOpen size={18} strokeWidth={1.6} />
+      </RailButton>
+      <RailButton label="Settings (Ctrl+,)" onClick={() => useWorkspace.getState().set({ settingsOpen: true })}>
+        <SlidersHorizontal size={18} strokeWidth={1.6} />
+      </RailButton>
+    </nav>
   );
 }
 
@@ -161,21 +174,32 @@ function TabContent({ tab, active }: { tab: Tab; active: boolean }) {
 function Welcome() {
   const recent = useSettings((s) => s.recentWorkspaces);
   return (
-    <div className="grid h-full place-items-center">
-      <div className="w-80 space-y-5 text-center">
-        <div className="text-2xl font-semibold tracking-tight">T-rax</div>
-        <div className="grid gap-1.5 text-left text-[12.5px]">
-          <WelcomeAction icon={SquareTerminal} label="New Terminal" hint="Ctrl+Shift+T" run={() => useWorkspace.getState().openTerminal()} />
-          <WelcomeAction icon={Search} label="Go to File" hint="Ctrl+P" run={() => useWorkspace.getState().set({ paletteOpen: true, paletteInitial: "" })} />
-          <WelcomeAction icon={FolderOpen} label="Open Folder" hint="Ctrl+O" run={pickFolder} />
-          <WelcomeAction icon={Bot} label="Ask the Agent" hint="Ctrl+I" run={() => useWorkspace.getState().set({ aiOpen: true })} />
+    <div className="flex h-full items-center justify-center overflow-auto px-6 py-16">
+      <div className="flex w-full max-w-[420px] flex-col gap-8">
+        <div className="flex flex-col gap-4">
+          <Logo size={56} />
+          <div>
+            <h1 className="m-0 font-mono text-[32px] leading-tight font-bold tracking-tight">t-rax</h1>
+            <p className="mt-2 text-[14px] leading-normal text-muted">Terminal, editor, git and agents. One window, no bloat.</p>
+          </div>
         </div>
-        {recent.length > 1 && (
-          <div className="space-y-1 text-left">
-            <div className="text-[11px] tracking-wider text-muted uppercase">Recent</div>
+        <div className="flex flex-col gap-0.5">
+          <WelcomeAction icon={SquareTerminal} label="New terminal" keys={["Ctrl", "⇧", "T"]} run={() => useWorkspace.getState().openTerminal()} />
+          <WelcomeAction icon={Search} label="Go to file" keys={["Ctrl", "P"]} run={() => useWorkspace.getState().set({ paletteOpen: true, paletteInitial: "" })} />
+          <WelcomeAction icon={FolderOpen} label="Open folder" keys={["Ctrl", "O"]} run={pickFolder} />
+          <WelcomeAction icon={Bot} label="Ask the agent" keys={["Ctrl", "I"]} run={() => useWorkspace.getState().set({ aiOpen: true })} />
+        </div>
+        {recent.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="label px-3 pb-1">Recent</span>
             {recent.slice(0, 5).map((r) => (
-              <button key={r} onClick={() => switchWorkspace(r)} className="block w-full truncate text-left text-[12px] text-blue hover:underline">
-                {basename(r)} <span className="text-muted">{r.replace(/^\/home\/[^/]+/, "~")}</span>
+              <button
+                key={r}
+                onClick={() => switchWorkspace(r)}
+                className="flex justify-between gap-3 px-3 py-1 text-left text-fg-soft hover:text-fg"
+              >
+                <span className="truncate">{basename(r)}</span>
+                <span className="truncate font-mono text-[12px] text-dim">{r.replace(/^\/home\/[^/]+/, "~").replace(/\/[^/]*$/, "")}</span>
               </button>
             ))}
           </div>
@@ -185,12 +209,12 @@ function Welcome() {
   );
 }
 
-function WelcomeAction({ icon: Icon, label, hint, run }: { icon: typeof Bot; label: string; hint: string; run: () => void }) {
+function WelcomeAction({ icon: Icon, label, keys, run }: { icon: typeof Bot; label: string; keys: string[]; run: () => void }) {
   return (
-    <button onClick={run} className="flex items-center gap-2.5 rounded-md px-3 py-2 hover:bg-hover">
-      <Icon size={15} className="text-muted" />
-      {label}
-      <span className="ml-auto text-[11px] text-muted">{hint}</span>
+    <button onClick={run} className="flex h-10 items-center gap-3 rounded-lg px-3 text-left text-[13.5px] font-medium hover:bg-elevated">
+      <Icon size={16} strokeWidth={1.8} className="text-muted" />
+      <span className="flex-1">{label}</span>
+      <Kbd keys={keys} />
     </button>
   );
 }
@@ -249,14 +273,14 @@ export default function App() {
         <Group orientation="horizontal" className="min-w-0 flex-1">
           {sidePanel && (
             <>
-              <Panel id="side" defaultSize={260} minSize={180} maxSize={520} className="bg-panel/95">
+              <Panel id="side" defaultSize={260} minSize={200} maxSize={520} className="bg-panel/95">
                 {sidePanel}
               </Panel>
               <Separator />
             </>
           )}
           <Panel id="main" minSize={300}>
-            <div className="flex h-full flex-col bg-bg/80">
+            <div className="flex h-full flex-col bg-bg/85">
               <TabBar />
               <div className="relative min-h-0 flex-1">
                 {tabs.map((t) => (
@@ -272,7 +296,7 @@ export default function App() {
           {aiOpen && (
             <>
               <Separator />
-              <Panel id="ai" defaultSize={380} minSize={280} maxSize={720}>
+              <Panel id="ai" defaultSize={360} minSize={300} maxSize={720}>
                 <AiPanel />
               </Panel>
             </>

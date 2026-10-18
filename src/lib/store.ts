@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AppTheme } from "./themes";
-import { basename } from "./ipc";
+import { basename, type GitStatus } from "./ipc";
 
 export type ProviderKind = "openai" | "anthropic";
 
@@ -24,6 +24,7 @@ export type Settings = {
   fontSize: number;
   vim: boolean;
   showHidden: boolean;
+  coloredIcons: boolean;
   bgImage: string;
   bgOpacity: number;
   bgBlur: number;
@@ -39,6 +40,7 @@ const DEFAULT_SETTINGS: Settings = {
   fontSize: 13,
   vim: false,
   showHidden: false,
+  coloredIcons: false,
   bgImage: "",
   bgOpacity: 0.15,
   bgBlur: 8,
@@ -100,6 +102,8 @@ type Workspace = {
   detectedUrls: string[];
   /** Bumped to make the explorer / git panels refresh. */
   fsVersion: number;
+  /** Latest `git status` of the workspace, shared by the rail, explorer and status bar. */
+  git: GitStatus | null;
   setRoot: (root: string) => void;
   openTab: (tab: Tab) => void;
   closeTab: (id: string) => void;
@@ -126,8 +130,9 @@ export const useWorkspace = create<Workspace>((set, get) => ({
   settingsOpen: false,
   detectedUrls: [],
   fsVersion: 0,
+  git: null,
   setRoot: (root) => {
-    set({ root, detectedUrls: [] });
+    set({ root, detectedUrls: [], git: null });
     const s = useSettings.getState();
     s.set({ recentWorkspaces: [root, ...s.recentWorkspaces.filter((r) => r !== root)].slice(0, 10) });
   },

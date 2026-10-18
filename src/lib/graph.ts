@@ -57,4 +57,4 @@ export function layoutGraph(commits: Commit[]): GraphRow[] {
   return rows;
 }
 
-export const LANE_COLORS = ["var(--c-blue)", "var(--c-magenta)", "var(--c-green)", "var(--c-yellow)", "var(--c-cyan)", "var(--c-red)"];
+export const LANE_COLORS = ["var(--c-accent)", "var(--c-blue)", "var(--c-magenta)", "var(--c-yellow)", "var(--c-cyan)", "var(--c-red)"];

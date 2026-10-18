@@ -58,6 +58,19 @@ export function Explorer() {
     return () => clearInterval(t);
   }, [root, expanded, load]);
 
+  // Git status per absolute path; folders get a dot when anything inside changed.
+  const git = useWorkspace((s) => s.git);
+  const gitMarks = useMemo(() => {
+    const files = new Map<string, string>();
+    const dirs = new Set<string>();
+    for (const c of git?.changes ?? []) {
+      const abs = `${git!.root}/${c.path}`;
+      if (!files.has(abs) || !c.staged) files.set(abs, c.status === "?" ? "U" : c.status);
+      for (let d = dirname(abs); d.length > git!.root.length; d = dirname(d)) dirs.add(d);
+    }
+    return { files, dirs };
+  }, [git]);
+
   const rows = useMemo(() => {
     const out: Row[] = [];
     const walk = (dir: string, depth: number) => {
@@ -161,13 +174,13 @@ export function Explorer() {
     <div className="flex h-full flex-col">
       <PanelHeader title={basename(root) || "Explorer"}>
         <IconBtn title="New File" onClick={() => setDraft({ kind: "file", parent: root })}>
-          <FilePlus size={14} />
+          <FilePlus size={14} strokeWidth={1.8} />
         </IconBtn>
         <IconBtn title="New Folder" onClick={() => setDraft({ kind: "dir", parent: root })}>
-          <FolderPlus size={14} />
+          <FolderPlus size={14} strokeWidth={1.8} />
         </IconBtn>
         <IconBtn title="Refresh" onClick={bumpFs}>
-          <RefreshCw size={13} />
+          <RefreshCw size={13} strokeWidth={1.8} />
         </IconBtn>
       </PanelHeader>
       <div
@@ -175,7 +188,8 @@ export function Explorer() {
         tabIndex={0}
         onKeyDown={onKey}
         onContextMenu={(e) => contextMenu(e)}
-        className="flex-1 overflow-auto py-1 outline-none"
+        aria-label="Files"
+        className="flex-1 overflow-auto px-2 py-0.5 outline-none"
       >
         {draftRow(root, 0)}
         {rows.map(({ entry, depth }) =>
@@ -191,19 +205,21 @@ export function Explorer() {
                   setSelected(entry.path);
                   contextMenu(ev, entry);
                 }}
-                className={`flex h-6 cursor-pointer items-center gap-1.5 pr-2 text-[12.5px] ${
-                  selected === entry.path ? "bg-hover text-fg" : "text-fg/85 hover:bg-hover/60"
+                className={`row flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-2 text-[13px] ${
+                  selected === entry.path ? "bg-hover text-fg" : "text-fg-soft hover:bg-elevated"
                 }`}
-                style={{ paddingLeft: 8 + depth * 12 }}
+                style={{ paddingLeft: 6 + depth * 14 }}
               >
                 <ChevronRight
                   size={12}
-                  className={`shrink-0 text-muted transition-transform ${entry.isDir ? "" : "invisible"} ${
+                  strokeWidth={2}
+                  className={`shrink-0 text-dim transition-transform ${entry.isDir ? "" : "invisible"} ${
                     expanded.has(entry.path) ? "rotate-90" : ""
                   }`}
                 />
-                <FileIcon name={entry.name} isDir={entry.isDir} open={expanded.has(entry.path)} />
-                <span className="truncate">{entry.name}</span>
+                <FileIcon name={entry.name} isDir={entry.isDir} open={expanded.has(entry.path)} size={15} />
+                <span className="flex-1 truncate">{entry.name}</span>
+                <GitMark status={entry.isDir ? (gitMarks.dirs.has(entry.path) ? "dir" : undefined) : gitMarks.files.get(entry.path)} />
               </div>
               {entry.isDir && expanded.has(entry.path) && draftRow(entry.path, depth + 1)}
             </div>
@@ -218,7 +234,7 @@ export function Explorer() {
 function DraftInput({ depth, isDir, initial, onDone }: { depth: number; isDir: boolean; initial: string; onDone: (v: string) => void }) {
   const [v, setV] = useState(initial);
   return (
-    <div className="flex h-6 items-center gap-1.5 pr-2" style={{ paddingLeft: 20 + depth * 12 }}>
+    <div className="flex h-7 items-center gap-1.5 pr-2" style={{ paddingLeft: 24 + depth * 14 }}>
       <FileIcon name={v || "file"} isDir={isDir} />
       <input
         autoFocus
@@ -231,16 +247,32 @@ function DraftInput({ depth, isDir, initial, onDone }: { depth: number; isDir: b
           e.stopPropagation();
         }}
         onBlur={() => onDone(v)}
-        className="h-5 flex-1 rounded border border-accent/60 bg-elevated px-1 text-[12.5px] outline-none"
+        className="h-6 flex-1 rounded-md border border-accent/60 bg-elevated px-1.5 text-[13px] outline-none"
       />
     </div>
   );
 }
 
+export const STATUS_COLOR: Record<string, string> = {
+  M: "text-yellow",
+  A: "text-accent",
+  U: "text-accent",
+  "?": "text-accent",
+  D: "text-red",
+  R: "text-blue",
+};
+
+/** Git status as a letter (never colour alone); folders get a quiet dot. */
+function GitMark({ status }: { status?: string }) {
+  if (!status) return null;
+  if (status === "dir") return <span aria-label="contains changes" className="h-1.5 w-1.5 shrink-0 rounded-full bg-dim" />;
+  return <span className={`shrink-0 font-mono text-[11px] font-medium ${STATUS_COLOR[status] ?? "text-muted"}`}>{status}</span>;
+}
+
 export function PanelHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="flex h-9 shrink-0 items-center justify-between border-b border-border px-3">
-      <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted">{title}</span>
+    <div className="flex h-11 shrink-0 items-center justify-between pr-2 pl-4">
+      <span className="label truncate">{title}</span>
       <div className="flex items-center gap-0.5">{children}</div>
     </div>
   );
@@ -250,8 +282,10 @@ export function IconBtn({ title, onClick, children, active }: { title: string; o
   return (
     <button
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       onClick={onClick}
-      className={`grid h-6 w-6 place-items-center rounded text-muted hover:bg-hover hover:text-fg ${active ? "bg-hover text-fg" : ""}`}
+      className={`grid h-7 w-7 place-items-center rounded-md text-muted hover:bg-hover hover:text-fg ${active ? "bg-hover text-fg" : ""}`}
     >
       {children}
     </button>

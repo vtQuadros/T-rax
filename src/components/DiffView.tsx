@@ -29,51 +29,68 @@ export function DiffView({ root, path, staged }: { root: string; path: string; s
     }
   };
 
-  if (error) return <div className="p-6 text-red">{error}</div>;
+  if (error) return <div className="selectable p-6 font-mono text-[12px] text-red">{error}</div>;
   if (!diff) return <div className="p-6 text-muted">Loading…</div>;
   if (!diff.hunks.length)
     return <div className="p-6 text-muted">No {staged ? "staged" : "unstaged"} changes in {path}.</div>;
 
   return (
-    <div className="h-full overflow-auto p-4 font-mono text-[12px] selectable">
-      <div className="mb-3 font-sans text-[12px] text-muted">
-        {path} · {staged ? "Staged" : "Working tree"}
+    <div className="flex h-full flex-col">
+      <div className="flex h-10 shrink-0 items-center border-b border-border px-6 font-mono text-[12px] text-muted">
+        {path.split("/").slice(0, -1).join(" / ")}
+        {path.includes("/") && " / "}
+        <span className="text-fg">{path.split("/").pop()}</span>
+        <span className="ml-1">· {staged ? "staged" : "working tree"}</span>
       </div>
-      {diff.hunks.map((h) => (
-        <div key={h.header} className="mb-4 overflow-hidden rounded-md border border-border">
-          <div className="flex items-center justify-between bg-elevated px-3 py-1 font-sans">
-            <span className="font-mono text-[11px] text-cyan">{h.header}</span>
-            <div className="flex gap-1">
-              {staged ? (
-                <Button variant="ghost" onClick={() => apply(hunkPatch(diff, h), true, true)}>
-                  Unstage hunk
-                </Button>
-              ) : (
-                <>
-                  <Button variant="ghost" onClick={() => confirm("Discard this hunk?") && apply(hunkPatch(diff, h), false, true)}>
-                    Discard
-                  </Button>
-                  <Button variant="ghost" onClick={() => apply(hunkPatch(diff, h), true, false)}>
-                    Stage hunk
-                  </Button>
-                </>
-              )}
+      <div className="flex flex-1 flex-col gap-4 overflow-auto px-6 py-5">
+        {diff.hunks.map((h) => (
+          <div key={h.header} className="overflow-hidden rounded-[10px] border border-border-strong">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-elevated py-1.5 pr-2 pl-3.5">
+              <span className="font-mono text-[12px] text-muted">{h.header}</span>
+              <div className="flex gap-1">
+                {staged ? (
+                  <Button onClick={() => apply(hunkPatch(diff, h), true, true)}>Unstage hunk</Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" onClick={() => confirm("Discard this hunk?") && apply(hunkPatch(diff, h), false, true)}>
+                      Discard
+                    </Button>
+                    <Button onClick={() => apply(hunkPatch(diff, h), true, false)}>Stage hunk</Button>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="selectable py-1.5 font-mono text-[13px] leading-[1.75]">
+              {numberLines(h.header, h.lines).map(({ text, kind, n }, i) => (
+                <div
+                  key={i}
+                  className={`flex px-3.5 whitespace-pre ${kind === "+" ? "bg-accent-soft text-green-200" : kind === "-" ? "bg-red-soft text-red-300" : "text-fg-soft"}`}
+                >
+                  <span className={`w-11 shrink-0 select-none ${kind === "+" ? "text-accent" : kind === "-" ? "text-red" : "text-dim"}`}>{n}</span>
+                  <span className="w-[18px] shrink-0 select-none">{kind === "+" ? "+" : kind === "-" ? "−" : ""}</span>
+                  <span>{text || " "}</span>
+                </div>
+              ))}
             </div>
           </div>
-          {h.lines.map((l, i) => (
-            <div
-              key={i}
-              className={`whitespace-pre px-3 ${
-                l[0] === "+" ? "bg-green/10 text-green" : l[0] === "-" ? "bg-red/10 text-red" : "text-fg/75"
-              }`}
-            >
-              {l || " "}
-            </div>
-          ))}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
+}
+
+/** Line numbers for a hunk: new-file numbers for context/additions, old ones for deletions. */
+function numberLines(header: string, lines: string[]) {
+  const m = header.match(/@@ -(\d+)(?:,\d+)? \+(\d+)/);
+  let oldN = m ? +m[1] : 0;
+  let newN = m ? +m[2] : 0;
+  return lines.map((l) => {
+    if (l[0] === "\\") return { kind: " ", n: "" as number | string, text: l };
+    const kind = l[0] === "+" ? "+" : l[0] === "-" ? "-" : " ";
+    const n = kind === "-" ? oldN++ : newN++;
+    if (kind === " ") oldN++;
+    return { kind, n, text: l.slice(1) };
+  });
 }
 
 export function CommitView({ root, hash }: { root: string; hash: string }) {
