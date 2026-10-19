@@ -31,20 +31,32 @@ e o código aberto dele. Não é afiliado ao Terax.
 
 ## Downloads
 
+**Versão mais recente** (os links sempre apontam para a última versão lançada):
+
 | Sistema | Arquivo | Como instalar |
 | --- | --- | --- |
-| **Linux** — Debian, Ubuntu, Zorin, Mint | [`T-rax_0.1.0_amd64.deb`](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) | `sudo apt install ./T-rax_0.1.0_amd64.deb` |
-| **Linux** — qualquer distro | [`T-rax_0.1.0_amd64.AppImage`](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) | `chmod +x T-rax_0.1.0_amd64.AppImage` e execute |
-| **Windows** | em breve | — |
+| **Linux** — Debian, Ubuntu, Zorin, Mint | [`T-rax_amd64.deb`](https://github.com/vtQuadros/T-rax/releases/latest/download/T-rax_amd64.deb) | `sudo apt install ./T-rax_amd64.deb` |
+| **Linux** — qualquer distro | [`T-rax_amd64.AppImage`](https://github.com/vtQuadros/T-rax/releases/latest/download/T-rax_amd64.AppImage) | `chmod +x T-rax_amd64.AppImage` e execute |
+| **Windows** | em breve ([#3](https://github.com/vtQuadros/T-rax/issues/3)) | — |
 | **macOS** | não planejado por enquanto | — |
 
-Todas as versões ficam em [Releases](https://github.com/vtQuadros/T-rax/releases).
+### Todas as versões
+
+Cada versão tem sua página, com o `.deb`, o AppImage e os checksums (`SHA256SUMS.txt`).
+Dá para baixar e instalar qualquer uma, inclusive voltar para uma anterior.
+
+| Versão | Data | Destaques | Downloads |
+| --- | --- | --- | --- |
+| [**v0.2.0**](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.0) | 19/10/2026 | Atualização automática, visual novo minimalista | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.AppImage) |
+| [v0.1.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.1.0) | 17/10/2026 | Primeira versão | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) |
+
+O histórico completo de mudanças está no [CHANGELOG](https://github.com/vtQuadros/T-rax/blob/Linux/CHANGELOG.md).
 
 ## Recursos
 
 - **Terminal de verdade** — xterm.js com renderização WebGL, várias abas, PTY nativo, links clicáveis.
 - **Editor** — CodeMirror 6 com modo Vim, 8 temas, `Ctrl+S` para salvar e **autocomplete com IA** (Tab aceita).
-- **Explorer** — ícones Catppuccin, navegação por teclado, criar/renomear/apagar pelo menu de contexto.
+- **Explorer** — status do git em cada arquivo, navegação por teclado, criar/renomear/apagar pelo menu de contexto.
 - **Busca** — no conteúdo de todo o projeto (texto ou regex, respeita `.gitignore`) e busca de arquivo por nome (`Ctrl+P`).
 - **Git** — stage/unstage/descartar por arquivo **ou por trecho (hunk)**, commit com `Ctrl+Enter`, push,
   e um **grafo de commits** com branches, merges e tags.
@@ -64,7 +76,7 @@ Todas as versões ficam em [Releases](https://github.com/vtQuadros/T-rax/release
 ### Linux (.deb)
 
 ```bash
-sudo apt install ./T-rax_0.1.0_amd64.deb
+sudo apt install ./T-rax_amd64.deb
 ```
 
 Depois procure **T-rax** no menu de aplicativos, ou rode `t-rax` no terminal. Para abrir direto numa
@@ -73,12 +85,25 @@ pasta: `t-rax ~/meu-projeto`.
 ### Linux (AppImage)
 
 ```bash
-chmod +x T-rax_0.1.0_amd64.AppImage
+chmod +x T-rax_amd64.AppImage
 ```
 
 ```bash
-./T-rax_0.1.0_amd64.AppImage
+./T-rax_amd64.AppImage
 ```
+
+### Atualizações
+
+A partir da v0.2.0, o T-rax verifica novas versões ao abrir e a cada 6 horas:
+
+- **AppImage:** aparece um aviso com **Update & restart**. O app baixa a versão nova, confere a
+  assinatura digital e se substitui sozinho.
+- **.deb:** aparece um aviso com o link do pacote novo. Instale por cima do atual com
+  `sudo apt install ./T-rax_X.Y.Z_amd64.deb`; suas configurações são mantidas.
+
+Você também pode verificar em **Settings → About & Updates** ou na paleta (`Ctrl+Shift+P` →
+*Check for Updates*), e desligar a verificação automática por lá. Quem está na v0.1.0 precisa
+instalar a v0.2.0 manualmente uma vez.
 
 ### Configurando a IA
 
