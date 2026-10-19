@@ -28,6 +28,19 @@ pub(crate) fn decode_utf8_carry(carry: &mut Vec<u8>, chunk: &[u8]) -> String {
     }
 }
 
+/// How this copy was installed, which decides how it can update itself:
+/// an AppImage replaces its own file; a .deb belongs to the package manager.
+#[tauri::command]
+fn install_kind() -> &'static str {
+    if std::env::var_os("APPIMAGE").is_some() {
+        return "appimage";
+    }
+    match std::env::current_exe() {
+        Ok(exe) if exe.starts_with("/usr") => "deb",
+        _ => "manual",
+    }
+}
+
 /// Forwards webview errors to stdout so they are visible without devtools.
 #[tauri::command]
 fn log_js(level: String, message: String) {
@@ -39,6 +52,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .on_page_load(|webview, payload| {
             if cfg!(debug_assertions) {
                 eprintln!("[page] {:?} {} ({})", payload.event(), payload.url(), webview.label());
@@ -48,6 +63,7 @@ pub fn run() {
         .manage(ai::AiState::default())
         .invoke_handler(tauri::generate_handler![
             log_js,
+            install_kind,
             pty::pty_open,
             pty::pty_write,
             pty::pty_resize,

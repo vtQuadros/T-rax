@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "T-rax",
-  "version": "0.1.0",
+  "version": "../package.json",
   "identifier": "dev.vtquadros.t-rax",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -42,7 +42,16 @@
       "icons/icon.png"
     ],
     "shortDescription": "Terminal-first, AI-native dev workspace",
-    "category": "DeveloperTool"
+    "category": "DeveloperTool",
+    "createUpdaterArtifacts": true
   },
-  "mainBinaryName": "t-rax"
+  "mainBinaryName": "t-rax",
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYzQkU5NEVCMUYwNkJEREIKUldUYnZRWWY2NVMrWTdqQy9oTWpCbkhuQ1B5dkpwVExDa2M4b2ZFUUMzY3lEWUt1cXRmZWJBZkwK",
+      "endpoints": [
+        "https://github.com/vtQuadros/T-rax/releases/latest/download/latest.json"
+      ]
+    }
+  }
 }

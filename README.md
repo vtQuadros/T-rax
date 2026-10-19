@@ -40,6 +40,24 @@ scripts/install-linux.sh
 
 (`scripts/install-linux.sh --uninstall` remove.)
 
+## Lançando uma versão
+
+1. Descreva a versão no `CHANGELOG.md`, numa seção `## [0.3.0] - AAAA-MM-DD`.
+2. Rode:
+
+```bash
+scripts/release.sh 0.3.0
+```
+
+O script atualiza o número da versão, faz o commit, cria a tag `v0.3.0` e envia. O GitHub Actions
+(`.github/workflows/release.yml`) compila, assina e publica a release com o `.deb`, o AppImage,
+os checksums e o `latest.json` que o app usa para se atualizar. Cada versão fica na sua página em
+[Releases](https://github.com/vtQuadros/T-rax/releases), então versões antigas continuam disponíveis.
+
+A assinatura usa os secrets `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`; a chave
+pública fica em `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). Sem a chave privada correta, os
+apps instalados recusam a atualização.
+
 ## Estrutura
 
 ```

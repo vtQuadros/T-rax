@@ -3,9 +3,11 @@ import { useState } from "react";
 import { PROVIDER_PRESETS } from "@/ai/providers";
 import { useSettings, useWorkspace } from "@/lib/store";
 import { APP_THEMES, type AppTheme, EDITOR_THEMES, findTheme } from "@/lib/themes";
-import { Button, inputCls, Modal } from "./ui";
+import { Button, inputCls, Logo, Modal } from "./ui";
+import { checkForUpdate, RELEASES_URL, useUpdate } from "@/lib/updater";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
-type Section = "ai" | "appearance" | "editor" | "snippets";
+type Section = "ai" | "appearance" | "editor" | "snippets" | "about";
 
 export function SettingsModal() {
   const open = useWorkspace((s) => s.settingsOpen);
@@ -21,6 +23,7 @@ export function SettingsModal() {
               ["appearance", "Themes"],
               ["editor", "Editor & Terminal"],
               ["snippets", "Snippets & Skills"],
+              ["about", "About & Updates"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -37,6 +40,7 @@ export function SettingsModal() {
           {section === "appearance" && <ThemeSection />}
           {section === "editor" && <EditorSection />}
           {section === "snippets" && <SnippetSection />}
+          {section === "about" && <AboutSection />}
         </div>
       </div>
     </Modal>
@@ -241,6 +245,52 @@ function SnippetSection() {
         </div>
       ))}
       <Button onClick={() => set({ snippets: [...snippets, { name: `snippet-${snippets.length + 1}`, prompt: "" }] })}>Add snippet</Button>
+    </>
+  );
+}
+
+const KIND_LABEL = {
+  appimage: "AppImage: updates install themselves",
+  deb: ".deb package: new versions are installed with apt",
+  manual: "Built from source or installed by script",
+};
+
+function AboutSection() {
+  const u = useUpdate();
+  const auto = useSettings((s) => s.autoUpdateCheck);
+  const set = useSettings((s) => s.set);
+  const status =
+    u.status === "checking"
+      ? "Checking…"
+      : u.status === "available" || u.status === "downloading"
+        ? `Version ${u.version} is available`
+        : u.status === "uptodate"
+          ? "You're on the latest version"
+          : u.status === "error"
+            ? `Check failed: ${u.error?.slice(0, 120)}`
+            : "";
+  return (
+    <>
+      <div className="flex items-center gap-4">
+        <Logo size={48} />
+        <div>
+          <div className="font-mono text-[20px] font-bold">t-rax</div>
+          <div className="font-mono text-[12px] text-muted">version {u.current || "dev"}</div>
+        </div>
+      </div>
+      <div className="space-y-1 text-[12.5px]">
+        <div className="text-fg-soft">{KIND_LABEL[u.kind]}</div>
+        {status && <div className={u.status === "error" ? "text-red" : "text-accent"}>{status}</div>}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="primary" disabled={u.status === "checking" || u.status === "downloading"} onClick={() => void checkForUpdate(true)}>
+          Check for updates
+        </Button>
+        <Button onClick={() => void openUrl(RELEASES_URL)}>All versions</Button>
+      </div>
+      <label className="flex items-center gap-2 text-[12.5px]">
+        <input type="checkbox" checked={auto} onChange={(e) => set({ autoUpdateCheck: e.target.checked })} /> Check for updates automatically
+      </label>
     </>
   );
 }

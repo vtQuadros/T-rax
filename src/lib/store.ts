@@ -25,6 +25,8 @@ export type Settings = {
   vim: boolean;
   showHidden: boolean;
   coloredIcons: boolean;
+  autoUpdateCheck: boolean;
+  skippedVersion: string;
   bgImage: string;
   bgOpacity: number;
   bgBlur: number;
@@ -41,6 +43,8 @@ const DEFAULT_SETTINGS: Settings = {
   vim: false,
   showHidden: false,
   coloredIcons: false,
+  autoUpdateCheck: true,
+  skippedVersion: "",
   bgImage: "",
   bgOpacity: 0.15,
   bgBlur: 8,

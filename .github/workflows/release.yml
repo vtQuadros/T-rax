@@ -1,0 +1,82 @@
+name: Release
+
+# Pushing a tag like v0.2.0 builds, signs and publishes that version.
+# Every version keeps its own release page, so older builds stay downloadable.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04 # older glibc: the AppImage also runs on older distros
+    env:
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches package.json
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$pkg" != "$VERSION" ]; then
+            echo "::error::Tag $VERSION does not match package.json ($pkg)"; exit 1
+          fi
+
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          ver="${VERSION#v}"
+          awk -v v="$ver" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "::error::CHANGELOG.md has no section for [$ver]"; exit 1; fi
+          printf '\n---\n**Instalar:** `sudo apt install ./T-rax_%s_amd64.deb` ou baixe o AppImage. Todas as versões: https://github.com/%s/releases\n' "$ver" "$GITHUB_REPOSITORY" >> notes.md
+
+      - name: Build, sign and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: T-rax ${{ github.ref_name }}
+          releaseBodyPath: notes.md
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          args: --bundles deb,appimage
+
+      - name: Checksums and fixed-name copies for "latest" links
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ver="${VERSION#v}"
+          cd src-tauri/target/release/bundle
+          cp "deb/T-rax_${ver}_amd64.deb" T-rax_amd64.deb
+          cp "appimage/T-rax_${ver}_amd64.AppImage" T-rax_amd64.AppImage
+          sha256sum "deb/T-rax_${ver}_amd64.deb" "appimage/T-rax_${ver}_amd64.AppImage" | sed 's#  [a-z]*/#  #' > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "$VERSION" SHA256SUMS.txt T-rax_amd64.deb T-rax_amd64.AppImage --clobber -R "$GITHUB_REPOSITORY"

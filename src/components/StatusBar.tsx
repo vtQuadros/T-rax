@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { ipc } from "@/lib/ipc";
 import { languageName } from "@/lib/lang";
 import { NO_TASKS, useSettings, useTasks, useWorkspace } from "@/lib/store";
+import { useUpdate } from "@/lib/updater";
 
 /** Polls `git status` for the whole app; panels read it from the store. */
 function useGitPolling() {
@@ -34,6 +35,7 @@ export function StatusBar() {
   const vim = useSettings((s) => s.vim);
   const tasks = useTasks((s) => s.byRoot[root] ?? NO_TASKS);
   const done = tasks.filter((t) => t.status === "done").length;
+  const update = useUpdate((s) => (s.status === "available" && s.dismissed ? s.version : null));
 
   return (
     <footer className="flex h-7 shrink-0 items-center gap-4 overflow-hidden border-t border-border bg-bg px-4 font-mono text-[11.5px] text-muted">
@@ -69,6 +71,11 @@ export function StatusBar() {
         </>
       )}
       <span>UTF-8</span>
+      {update && (
+        <button className="text-accent hover:underline" title="Show update" onClick={() => useUpdate.setState({ dismissed: false })}>
+          ↑ {update}
+        </button>
+      )}
     </footer>
   );
 }

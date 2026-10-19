@@ -19,10 +19,12 @@ import { StatusBar } from "./components/StatusBar";
 import { TabBar } from "./components/TabBar";
 import { TasksPanel } from "./components/TasksPanel";
 import { TerminalView } from "./components/TerminalView";
+import { UpdateToast } from "./components/UpdateToast";
 import { Kbd, Logo } from "./components/ui";
 import { basename, ipc } from "./lib/ipc";
 import { type SidebarPanel, type Tab, useSettings, useWorkspace } from "./lib/store";
 import { applyTheme, findTheme } from "./lib/themes";
+import { checkForUpdate, initUpdater } from "./lib/updater";
 
 async function pickFolder() {
   const dir = await openDialog({ directory: true, multiple: false });
@@ -43,6 +45,7 @@ function useBoot() {
   useEffect(() => {
     if (booted) return;
     booted = true;
+    void initUpdater();
     (async () => {
       const launch = await ipc.launchDir().catch(() => null);
       const recent = useSettings.getState().recentWorkspaces[0];
@@ -245,6 +248,7 @@ export default function App() {
       { id: "ai", label: "Toggle Agent Panel", hint: "Ctrl+I", run: () => ws().set({ aiOpen: !ws().aiOpen }) },
       { id: "newchat", label: "Agent: New Chat", run: () => useChat.getState().reset() },
       { id: "settings", label: "Settings", hint: "Ctrl+,", run: () => ws().set({ settingsOpen: true }) },
+      { id: "update", label: "Check for Updates", run: () => void checkForUpdate(true) },
       { id: "vim", label: "Toggle Vim Mode", run: () => s().set({ vim: !s().vim }) },
       { id: "hidden", label: "Toggle Hidden Files", run: () => s().set({ showHidden: !s().showHidden }) },
       { id: "memory", label: "Edit Project Memory (TRAX.md)", run: () => ws().openFile(`${ws().root}/TRAX.md`) },
@@ -307,6 +311,7 @@ export default function App() {
         <StatusBar />
       </div>
       <CommandPalette commands={commands} />
+      <UpdateToast />
       <SettingsModal />
     </div>
   );
