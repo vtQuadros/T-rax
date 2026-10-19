@@ -208,7 +208,7 @@ export function Explorer() {
                 className={`row flex h-7 cursor-pointer items-center gap-1.5 rounded-md pr-2 text-[13px] ${
                   selected === entry.path ? "bg-hover text-fg" : "text-fg-soft hover:bg-elevated"
                 }`}
-                style={{ paddingLeft: 6 + depth * 14 }}
+                style={{ paddingLeft: 8 + depth * 16 }}
               >
                 <ChevronRight
                   size={12}
@@ -234,7 +234,7 @@ export function Explorer() {
 function DraftInput({ depth, isDir, initial, onDone }: { depth: number; isDir: boolean; initial: string; onDone: (v: string) => void }) {
   const [v, setV] = useState(initial);
   return (
-    <div className="flex h-7 items-center gap-1.5 pr-2" style={{ paddingLeft: 24 + depth * 14 }}>
+    <div className="flex h-7 items-center gap-1.5 pr-2" style={{ paddingLeft: 26 + depth * 16 }}>
       <FileIcon name={v || "file"} isDir={isDir} />
       <input
         autoFocus

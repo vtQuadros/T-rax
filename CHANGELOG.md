@@ -3,6 +3,13 @@
 Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
 
+## [0.2.1] - 2026-10-19
+
+### Corrigido
+- Explorer e listas voltam ao design: só texto, setas nas pastas e status do git à direita.
+  Os ícones do Catppuccin ficam opcionais (Settings → Editor & Terminal → *Show file icons*).
+- A janela abre maximizada e não passa mais do tamanho da tela (painel do agente e barra de status cortados).
+
 ## [0.2.0] - 2026-10-19
 
 ### Novo

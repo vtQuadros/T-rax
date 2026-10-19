@@ -47,18 +47,9 @@ function iconFor(name: string, isDir: boolean, open: boolean) {
   return ext && ICONS.has(ext) ? ext : "file";
 }
 
-// Monochrome by default: shapes stay distinct, colour is reserved for status.
-const MONO = { filter: "grayscale(1) brightness(1.2)", opacity: 0.7 };
-
 export function FileIcon({ name, isDir = false, open = false, size = 16 }: { name: string; isDir?: boolean; open?: boolean; size?: number }) {
-  const colored = useSettings((s) => s.coloredIcons);
-  return (
-    <Icon
-      icon={`catppuccin:${iconFor(name, isDir, open)}`}
-      width={size}
-      height={size}
-      className="shrink-0"
-      style={colored ? undefined : MONO}
-    />
-  );
+  // The default design is text-only (chevrons for folders); colour stays for git status.
+  const show = useSettings((s) => s.coloredIcons);
+  if (!show) return null;
+  return <Icon icon={`catppuccin:${iconFor(name, isDir, open)}`} width={size} height={size} className="shrink-0" />;
 }

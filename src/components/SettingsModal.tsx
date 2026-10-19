@@ -216,7 +216,7 @@ function EditorSection() {
         <input type="checkbox" checked={s.showHidden} onChange={(e) => s.set({ showHidden: e.target.checked })} /> Show hidden files in the explorer
       </label>
       <label className="flex items-center gap-2 text-[12.5px]">
-        <input type="checkbox" checked={s.coloredIcons} onChange={(e) => s.set({ coloredIcons: e.target.checked })} /> Colored file icons (Catppuccin)
+        <input type="checkbox" checked={s.coloredIcons} onChange={(e) => s.set({ coloredIcons: e.target.checked })} /> Show file icons (Catppuccin, colored)
       </label>
     </>
   );
