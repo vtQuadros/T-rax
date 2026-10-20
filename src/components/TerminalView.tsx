@@ -134,5 +134,5 @@ export function TerminalView({ tabId, cwd, active }: { tabId: string; cwd: strin
     return () => clearInterval(t);
   }, [active]);
 
-  return <div ref={host} className="h-full w-full" onClick={() => termRef.current?.focus()} />;
+  return <div ref={host} data-drop="terminal" data-tab-id={tabId} className="h-full w-full" onClick={() => termRef.current?.focus()} />;
 }

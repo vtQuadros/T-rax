@@ -3,7 +3,8 @@ import { type AiSettings, newId } from "@/lib/store";
 
 export type ToolCall = { id: string; name: string; args: string };
 export type Msg =
-  | { role: "system" | "user"; content: string }
+  | { role: "system"; content: string }
+  | { role: "user"; content: string; images?: { mime: string; data: string }[] }
   | { role: "assistant"; content: string; toolCalls?: ToolCall[] }
   | { role: "tool"; content: string; toolCallId: string; name: string };
 
@@ -88,7 +89,15 @@ async function chatOpenAI(req: ChatRequest): Promise<ChatResult> {
           : undefined,
       };
     if (m.role === "tool") return { role: "tool", tool_call_id: m.toolCallId, content: m.content };
-    return m;
+    if (m.role === "user" && m.images?.length)
+      return {
+        role: "user",
+        content: [
+          { type: "text", text: m.content },
+          ...m.images.map((i) => ({ type: "image_url", image_url: { url: `data:${i.mime};base64,${i.data}` } })),
+        ],
+      };
+    return { role: m.role, content: m.content };
   });
   const body: Record<string, unknown> = {
     model: req.model || s.model,
@@ -144,7 +153,10 @@ async function chatAnthropic(req: ChatRequest): Promise<ChatResult> {
     else out.push({ role, content: [block] });
   };
   for (const m of req.messages) {
-    if (m.role === "user") push("user", { type: "text", text: m.content });
+    if (m.role === "user") {
+      for (const i of m.images ?? []) push("user", { type: "image", source: { type: "base64", media_type: i.mime, data: i.data } });
+      push("user", { type: "text", text: m.content });
+    }
     else if (m.role === "tool") push("user", { type: "tool_result", tool_use_id: m.toolCallId, content: m.content });
     else if (m.role === "assistant") {
       if (m.content) push("assistant", { type: "text", text: m.content });

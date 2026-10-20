@@ -3979,6 +3979,7 @@ dependencies = [
 name = "t-rax"
 version = "0.2.2"
 dependencies = [
+ "base64 0.22.1",
  "dirs 6.0.0",
  "futures-util",
  "ignore",

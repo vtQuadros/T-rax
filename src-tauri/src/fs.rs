@@ -210,6 +210,7 @@ pub struct FileStat {
     size: u64,
     /// Milliseconds since the Unix epoch; used to reload viewers when a file changes.
     modified: u64,
+    is_dir: bool,
 }
 
 #[tauri::command]
@@ -221,7 +222,7 @@ pub async fn fs_stat(path: String) -> Result<FileStat, String> {
         .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
         .map(|d| d.as_millis() as u64)
         .unwrap_or(0);
-    Ok(FileStat { size: meta.len(), modified })
+    Ok(FileStat { size: meta.len(), modified, is_dir: meta.is_dir() })
 }
 
 /// Lets the webview load exactly this file through the asset protocol (image and
@@ -238,4 +239,16 @@ pub fn media_allow(app: tauri::AppHandle, path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn open_default(path: String) -> Result<(), String> {
     tauri_plugin_opener::open_path(path, None::<&str>).map_err(|e| e.to_string())
+}
+
+/// File contents as base64, for attaching images to an agent message.
+#[tauri::command]
+pub async fn fs_read_base64(path: String, max_bytes: u64) -> Result<String, String> {
+    use base64::Engine;
+    let meta = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+    if meta.len() > max_bytes {
+        return Err(format!("file too large ({} MB, limit {} MB)", meta.len() / 1_048_576, max_bytes / 1_048_576));
+    }
+    let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
 }

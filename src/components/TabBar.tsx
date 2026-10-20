@@ -1,6 +1,6 @@
 import { Bot, FileDiff, FileText, GitCommit, Globe, Image, PanelRight, Plus, SquareTerminal, X } from "lucide-react";
 import { useState } from "react";
-import { type Tab, useWorkspace } from "@/lib/store";
+import { type Tab, toggleAgent, useSettings, useWorkspace } from "@/lib/store";
 import { FileIcon } from "./FileIcon";
 import { ContextMenu, type MenuItem } from "./ui";
 
@@ -29,7 +29,7 @@ export function TabBar() {
   const setActive = useWorkspace((s) => s.setActive);
   const closeTab = useWorkspace((s) => s.closeTab);
   const openTerminal = useWorkspace((s) => s.openTerminal);
-  const aiOpen = useWorkspace((s) => s.aiOpen);
+  const aiOpen = useSettings((s) => s.agentPanel === "open");
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const renamingId = useWorkspace((s) => s.renamingId);
   const updateTab = useWorkspace((s) => s.updateTab);
@@ -130,7 +130,7 @@ export function TabBar() {
         </button>
       </div>
       <button
-        onClick={() => useWorkspace.getState().set({ aiOpen: !aiOpen })}
+        onClick={toggleAgent}
         aria-pressed={aiOpen}
         className={`mr-2 flex shrink-0 items-center gap-2 self-center rounded-md px-2.5 py-1.5 text-[12.5px] font-medium ${
           aiOpen ? "text-fg" : "text-muted hover:bg-hover hover:text-fg"

@@ -13,8 +13,16 @@ const media = ["/demo/media/spec.pdf", "/demo/media/logo.png", "/demo/media/icon
 
 export function installMockIpc() {
   mockIPC((cmd, args: any) => {
-    if (cmd === "fs_stat") return { size: 1024, modified: 1 };
+    if (cmd === "fs_stat") return { size: 1024, modified: 1, isDir: !/\.[a-z0-9]+$/i.test(args.path) };
     if (cmd === "media_allow" || cmd === "open_default") return null;
+    // The paperclip's file picker returns the media fixtures.
+    if (cmd === "plugin:dialog|open") return ["/demo/media/spec.pdf", "/demo/media/logo.png"];
+    // Keep the last model request so the UI can be checked without a real provider.
+    if (cmd === "ai_stream") return void ((window as any).__lastAiBody = JSON.parse(args.body));
+    if (cmd === "fs_read_base64")
+      return fetch(`/__dev_file?name=${encodeURIComponent(args.path.split("/").pop())}`)
+        .then((r) => r.arrayBuffer())
+        .then((b) => btoa(String.fromCharCode(...new Uint8Array(b))));
     switch (cmd) {
       case "workspace_home":
         return "/demo";

@@ -1,7 +1,7 @@
 import { Circle, CircleCheck, CircleDot, Play, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useChat } from "@/ai/store";
-import { NO_TASKS, newId, type TaskItem, useTasks, useWorkspace } from "@/lib/store";
+import { NO_TASKS, newId, openAgent, type TaskItem, useTasks, useWorkspace } from "@/lib/store";
 import { IconBtn, PanelHeader } from "./Explorer";
 import { Button, inputCls } from "./ui";
 
@@ -82,7 +82,7 @@ export function TasksPanel() {
             className="w-full"
             disabled={running}
             onClick={() => {
-              useWorkspace.getState().set({ aiOpen: true });
+              openAgent();
               void useChat.getState().send("Continue working through the task list. Pick up where we left off and keep the list updated.");
             }}
           >

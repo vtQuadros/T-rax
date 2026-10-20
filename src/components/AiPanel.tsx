@@ -1,4 +1,6 @@
-import { ArrowUp, Bot, Check, Plus, Settings2, Square, Terminal } from "lucide-react";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { ArrowUp, Bot, Check, FileCode, FileText, Image as ImageIcon, PanelRightClose, Paperclip, Plus, Settings2, Square, Terminal, X } from "lucide-react";
+import { formatSize } from "@/ai/attachments";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
@@ -24,6 +26,12 @@ export function AiPanel() {
   const scroller = useRef<HTMLDivElement>(null);
   const configured = ai.apiKey || (ai.provider === "openai" && /localhost|127\.0\.0\.1/.test(ai.baseUrl));
   const hasMemory = useHasMemory();
+  const attachments = useChat((s) => s.attachments);
+  const dropping = useWorkspace((s) => s.dropTarget === "agent");
+  const pickFiles = async () => {
+    const picked = await openDialog({ multiple: true, directory: false });
+    if (picked) void useChat.getState().addAttachments(Array.isArray(picked) ? picked : [picked]);
+  };
 
   useEffect(() => {
     const el = scroller.current;
@@ -31,7 +39,7 @@ export function AiPanel() {
   }, [items]);
 
   const submit = () => {
-    if (!text.trim() || running) return;
+    if ((!text.trim() && !useChat.getState().attachments.length) || running) return;
     void send(text);
     setText("");
   };
@@ -39,7 +47,14 @@ export function AiPanel() {
   const slash = text.startsWith("/") && !text.includes(" ") ? snippets.filter((s) => s.name.startsWith(text.slice(1))) : [];
 
   return (
-    <section aria-label="Agent" className="flex h-full flex-col bg-panel">
+    <section aria-label="Agent" data-drop="agent" className="relative flex h-full flex-col bg-panel">
+      {dropping && (
+        <div className="pointer-events-none absolute inset-2 z-20 grid place-items-center rounded-xl border-2 border-dashed border-accent bg-accent-soft">
+          <span className="flex items-center gap-2 font-mono text-[12px] text-accent">
+            <Paperclip size={14} /> Drop to attach
+          </span>
+        </div>
+      )}
       <div className="flex h-11 shrink-0 items-center justify-between border-b border-border pr-2 pl-4">
         <div className="flex min-w-0 items-baseline gap-2">
           <span className="font-semibold">Agent</span>
@@ -51,6 +66,12 @@ export function AiPanel() {
           </IconBtn>
           <IconBtn title="AI settings" onClick={() => useWorkspace.getState().set({ settingsOpen: true })}>
             <Settings2 size={14} strokeWidth={1.8} />
+          </IconBtn>
+          <IconBtn title="Minimize" onClick={() => useSettings.getState().set({ agentPanel: "minimized" })}>
+            <PanelRightClose size={14} strokeWidth={1.8} />
+          </IconBtn>
+          <IconBtn title="Close (Ctrl+I reopens)" onClick={() => useSettings.getState().set({ agentPanel: "closed" })}>
+            <X size={14} strokeWidth={1.8} />
           </IconBtn>
         </div>
       </div>
@@ -90,6 +111,24 @@ export function AiPanel() {
           </div>
         )}
         <div className="rounded-[10px] border border-border-strong bg-elevated focus-within:border-accent/50">
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-2.5 pt-2.5">
+              {attachments.map((a) => (
+                <span key={a.id} className="flex max-w-full items-center gap-1.5 rounded-md bg-hover py-1 pr-1 pl-2 text-[12px]" title={a.path}>
+                  {a.kind === "image" ? <ImageIcon size={12} /> : a.kind === "pdf" ? <FileText size={12} /> : <FileCode size={12} />}
+                  <span className="truncate">{a.name}</span>
+                  <span className="font-mono text-[10.5px] text-dim">{formatSize(a.size)}</span>
+                  <button
+                    aria-label={`Remove ${a.name}`}
+                    onClick={() => useChat.getState().removeAttachment(a.id)}
+                    className="grid h-4 w-4 place-items-center rounded text-muted hover:bg-border hover:text-fg"
+                  >
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <label htmlFor="agent-input" className="sr-only">
             Message the agent
           </label>
@@ -109,6 +148,9 @@ export function AiPanel() {
           />
           <div className="flex items-center justify-between gap-2 pt-1 pr-2 pb-2 pl-3">
             <div className="flex min-w-0 items-center gap-3 font-mono text-[11px] text-dim">
+              <button onClick={() => void pickFiles()} title="Attach files (or drag them here)" aria-label="Attach files" className="text-muted hover:text-fg">
+                <Paperclip size={14} />
+              </button>
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" checked={autoApprove} onChange={(e) => useChat.getState().set({ autoApprove: e.target.checked })} />
                 auto-run
@@ -122,7 +164,7 @@ export function AiPanel() {
             ) : (
               <button
                 onClick={submit}
-                disabled={!text.trim()}
+                disabled={!text.trim() && !attachments.length}
                 className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-accent text-accent-fg disabled:opacity-30"
                 aria-label="Send"
               >
@@ -133,6 +175,28 @@ export function AiPanel() {
         </div>
       </div>
     </section>
+  );
+}
+
+/** The minimized agent: a thin strip on the right; a click brings the panel back. */
+export function AgentStrip() {
+  const running = useChat((s) => s.running);
+  const pendingReview = useChat((s) => Object.values(s.edits).some((e) => e.status === "pending") || Object.values(s.approvals).some((a) => a.status === "pending"));
+  return (
+    <button
+      onClick={() => useSettings.getState().set({ agentPanel: "open" })}
+      title="Open agent (Ctrl+I)"
+      aria-label="Open agent"
+      className="flex w-10 shrink-0 flex-col items-center gap-3 border-l border-border bg-panel py-3 text-muted hover:bg-elevated hover:text-fg"
+    >
+      <span className="relative">
+        <Bot size={17} strokeWidth={1.6} />
+        {(running || pendingReview) && (
+          <span className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${pendingReview ? "bg-yellow" : "animate-pulse bg-accent"}`} />
+        )}
+      </span>
+      <span className="font-mono text-[11px] font-semibold tracking-[0.08em] uppercase [writing-mode:vertical-rl]">Agent</span>
+    </button>
   );
 }
 
@@ -180,7 +244,18 @@ function Item({ item }: { item: ChatItem }) {
   const html = useMemo(() => (item.kind === "assistant" ? DOMPurify.sanitize(marked.parse(item.text) as string) : ""), [item]);
   if (item.kind === "user")
     return (
-      <div className="selectable max-w-[85%] self-end rounded-[10px] bg-hover px-3 py-2.5 text-[13px] leading-normal whitespace-pre-wrap">{item.text}</div>
+      <div className="selectable max-w-[85%] self-end rounded-[10px] bg-hover px-3 py-2.5 text-[13px] leading-normal whitespace-pre-wrap">
+        {item.text}
+        {item.files?.length ? (
+          <div className={`flex flex-wrap gap-1 font-mono text-[11px] text-muted ${item.text ? "mt-2" : ""}`}>
+            {item.files.map((f) => (
+              <span key={f} className="flex items-center gap-1 rounded bg-border px-1.5 py-0.5">
+                <Paperclip size={10} /> {f}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
     );
   if (item.kind === "assistant")
     return (

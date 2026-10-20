@@ -1,12 +1,13 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { Bot, Files, FolderOpen, GitBranch, ListTodo, Search, SlidersHorizontal, SquareTerminal } from "lucide-react";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { useChat } from "./ai/store";
 import { AiDiffView } from "./components/AiDiffView";
-import { AiPanel } from "./components/AiPanel";
+import { AgentStrip, AiPanel } from "./components/AiPanel";
 import { CommandPalette, type PaletteCommand } from "./components/CommandPalette";
 import { CommitView, DiffView } from "./components/DiffView";
 import { EditorPane } from "./components/EditorView";
@@ -20,11 +21,11 @@ import { SourceControl } from "./components/SourceControl";
 import { StatusBar } from "./components/StatusBar";
 import { TabBar } from "./components/TabBar";
 import { TasksPanel } from "./components/TasksPanel";
-import { TerminalView } from "./components/TerminalView";
+import { terminals, TerminalView } from "./components/TerminalView";
 import { UpdateToast } from "./components/UpdateToast";
 import { Kbd, Logo } from "./components/ui";
 import { basename, ipc } from "./lib/ipc";
-import { type SidebarPanel, type Tab, useSettings, useWorkspace } from "./lib/store";
+import { openAgent, type SidebarPanel, type Tab, toggleAgent, useSettings, useWorkspace } from "./lib/store";
 import { applyTheme, findTheme } from "./lib/themes";
 import { checkForUpdate, initUpdater } from "./lib/updater";
 
@@ -40,6 +41,47 @@ function switchWorkspace(dir: string) {
   ws.set({ tabs: [], activeId: null });
   ws.setRoot(dir);
   ws.openTerminal(dir);
+}
+
+/** Shell-safe single quoting for paths pasted into a terminal. */
+const shellQuote = (p: string) => `'${p.replace(/'/g, "'\\''")}'`;
+
+/**
+ * Files dragged in from the desktop: onto the agent they become attachments,
+ * onto a terminal their paths are typed in, anywhere else they open in a tab.
+ */
+function useFileDrop() {
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    const zoneAt = (x: number, y: number) => {
+      const el = document.elementFromPoint(x / devicePixelRatio, y / devicePixelRatio)?.closest<HTMLElement>("[data-drop]");
+      return el ? { kind: el.dataset.drop as "agent" | "terminal" | "main", tabId: el.dataset.tabId } : null;
+    };
+    let webview: ReturnType<typeof getCurrentWebview>;
+    try {
+      webview = getCurrentWebview();
+    } catch {
+      return; // not running inside Tauri (browser dev mode): throws synchronously
+    }
+    webview
+      .onDragDropEvent(async ({ payload: p }) => {
+        const ws = useWorkspace.getState();
+        if (p.type === "leave") return ws.set({ dropTarget: null });
+        const zone = zoneAt(p.position.x, p.position.y);
+        if (p.type !== "drop") return ws.set({ dropTarget: zone?.kind ?? null });
+        ws.set({ dropTarget: null });
+        if (!zone || !p.paths.length) return;
+        if (zone.kind === "agent") return void useChat.getState().addAttachments(p.paths);
+        if (zone.kind === "terminal" && zone.tabId) return terminals.get(zone.tabId)?.write(`${p.paths.map(shellQuote).join(" ")} `);
+        for (const path of p.paths) {
+          const st = await ipc.stat(path).catch(() => null);
+          if (st && !st.isDir) ws.openFile(path); // folders are skipped
+        }
+      })
+      .then((f) => (unlisten = f))
+      .catch(() => {});
+    return () => unlisten?.();
+  }, []);
 }
 
 let booted = false;
@@ -86,7 +128,7 @@ function useShortcuts() {
         if (k === "g") return run(() => ws.setSidebar("git"));
         if (k === "e") return run(() => ws.setSidebar("explorer"));
         if (k === "k") return run(() => ws.setSidebar("tasks"));
-        if (k === "i") return run(() => ws.set({ aiOpen: !ws.aiOpen }));
+        if (k === "i") return run(toggleAgent);
         return;
       }
       if (e.key === "Tab") {
@@ -99,7 +141,7 @@ function useShortcuts() {
       if (inTerminal) return;
       if (k === "p") return run(() => ws.set({ paletteOpen: true, paletteInitial: "" }));
       if (k === "b") return run(() => ws.set({ sidebar: ws.sidebar ? null : "explorer" }));
-      if (k === "i") return run(() => ws.set({ aiOpen: !ws.aiOpen }));
+      if (k === "i") return run(toggleAgent);
       if (k === ",") return run(() => ws.set({ settingsOpen: true }));
       if (k === "o") return run(() => void pickFolder());
       if (/^[1-9]$/.test(k)) return run(() => ws.tabs[+k - 1] && ws.setActive(ws.tabs[+k - 1].id));
@@ -140,6 +182,7 @@ function Rail() {
   const sidebar = useWorkspace((s) => s.sidebar);
   const toggle = useWorkspace((s) => s.toggleSidebar);
   const changes = useWorkspace((s) => s.git?.changes.length ?? 0);
+  const agentPanel = useSettings((s) => s.agentPanel);
   return (
     <nav aria-label="Panels" className="flex w-[52px] shrink-0 flex-col items-center gap-1 border-r border-border bg-bg py-3">
       <Logo size={28} className="mb-3.5" />
@@ -149,6 +192,9 @@ function Rail() {
         </RailButton>
       ))}
       <div className="flex-1" />
+      <RailButton label={agentPanel === "open" ? "Close agent (Ctrl+I)" : "Open agent (Ctrl+I)"} active={agentPanel === "open"} onClick={toggleAgent}>
+        <Bot size={18} strokeWidth={1.6} />
+      </RailButton>
       <RailButton label="Open Folder (Ctrl+O)" onClick={pickFolder}>
         <FolderOpen size={18} strokeWidth={1.6} />
       </RailButton>
@@ -194,7 +240,7 @@ function Welcome() {
           <WelcomeAction icon={SquareTerminal} label="New terminal" keys={["Ctrl", "⇧", "T"]} run={() => useWorkspace.getState().openTerminal()} />
           <WelcomeAction icon={Search} label="Go to file" keys={["Ctrl", "P"]} run={() => useWorkspace.getState().set({ paletteOpen: true, paletteInitial: "" })} />
           <WelcomeAction icon={FolderOpen} label="Open folder" keys={["Ctrl", "O"]} run={pickFolder} />
-          <WelcomeAction icon={Bot} label="Ask the agent" keys={["Ctrl", "I"]} run={() => useWorkspace.getState().set({ aiOpen: true })} />
+          <WelcomeAction icon={Bot} label="Ask the agent" keys={["Ctrl", "I"]} run={openAgent} />
         </div>
         {recent.length > 0 && (
           <div className="flex flex-col gap-1">
@@ -230,10 +276,12 @@ export default function App() {
   useBoot();
   useThemeSync();
   useShortcuts();
+  useFileDrop();
+  const dropTarget = useWorkspace((s) => s.dropTarget);
   const tabs = useWorkspace((s) => s.tabs);
   const activeId = useWorkspace((s) => s.activeId);
   const sidebar = useWorkspace((s) => s.sidebar);
-  const aiOpen = useWorkspace((s) => s.aiOpen);
+  const agentPanel = useSettings((s) => s.agentPanel);
   const root = useWorkspace((s) => s.root);
   const bg = useSettings(useShallow((s) => ({ image: s.bgImage, opacity: s.bgOpacity, blur: s.bgBlur })));
 
@@ -251,7 +299,8 @@ export default function App() {
       { id: "rename", label: "Rename Tab", hint: "F2 on tab", run: () => ws().activeId && ws().set({ renamingId: ws().activeId }) },
       { id: "follow", label: "Toggle Explorer Follows Terminal", run: () => s().set({ followTerminal: !s().followTerminal }) },
       { id: "preview", label: "Open Web Preview", run: () => ws().openPreview(ws().detectedUrls[0] ?? "http://localhost:5173") },
-      { id: "ai", label: "Toggle Agent Panel", hint: "Ctrl+I", run: () => ws().set({ aiOpen: !ws().aiOpen }) },
+      { id: "ai", label: "Toggle Agent Panel", hint: "Ctrl+I", run: toggleAgent },
+      { id: "ai-min", label: "Minimize Agent Panel", run: () => s().set({ agentPanel: "minimized" }) },
       { id: "newchat", label: "Agent: New Chat", run: () => useChat.getState().reset() },
       { id: "settings", label: "Settings", hint: "Ctrl+,", run: () => ws().set({ settingsOpen: true }) },
       { id: "update", label: "Check for Updates", run: () => void checkForUpdate(true) },
@@ -292,7 +341,12 @@ export default function App() {
           <Panel id="main" minSize={300}>
             <div className="flex h-full flex-col bg-bg/85">
               <TabBar />
-              <div className="relative min-h-0 flex-1">
+              <div className="relative min-h-0 flex-1" data-drop="main">
+                {(dropTarget === "main" || dropTarget === "terminal") && (
+                  <div className="pointer-events-none absolute inset-2 z-20 grid place-items-center rounded-xl border-2 border-dashed border-accent bg-accent-soft">
+                    <span className="font-mono text-[12px] text-accent">{dropTarget === "terminal" ? "Drop to paste the path" : "Drop to open"}</span>
+                  </div>
+                )}
                 {tabs.map((t) => (
                   // Every tab stays mounted so terminals keep their PTY and editors their state.
                   <div key={t.id} className="absolute inset-0" style={{ display: t.id === activeId ? "block" : "none" }}>
@@ -303,7 +357,7 @@ export default function App() {
               </div>
             </div>
           </Panel>
-          {aiOpen && (
+          {agentPanel === "open" && (
             <>
               <Separator />
               <Panel id="ai" defaultSize={360} minSize={300} maxSize={720}>
@@ -312,6 +366,7 @@ export default function App() {
             </>
           )}
         </Group>
+        {agentPanel === "minimized" && <AgentStrip />}
       </div>
       <div className="relative z-10">
         <StatusBar />

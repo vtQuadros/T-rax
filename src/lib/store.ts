@@ -27,6 +27,8 @@ export type Settings = {
   coloredIcons: boolean;
   /** The explorer shows the active terminal's current directory. */
   followTerminal: boolean;
+  /** Agent panel: open, minimized to a strip on the right, or closed. Remembered across restarts. */
+  agentPanel: "open" | "minimized" | "closed";
   autoUpdateCheck: boolean;
   skippedVersion: string;
   bgImage: string;
@@ -46,6 +48,7 @@ const DEFAULT_SETTINGS: Settings = {
   showHidden: false,
   coloredIcons: false,
   followTerminal: true,
+  agentPanel: "open",
   autoUpdateCheck: true,
   skippedVersion: "",
   bgImage: "",
@@ -103,7 +106,6 @@ type Workspace = {
   tabs: Tab[];
   activeId: string | null;
   sidebar: SidebarPanel;
-  aiOpen: boolean;
   paletteOpen: boolean;
   paletteInitial: string;
   settingsOpen: boolean;
@@ -116,6 +118,8 @@ type Workspace = {
   explorerRoot: string;
   /** Tab whose title is being edited inline (double-click, context menu or palette). */
   renamingId: string | null;
+  /** Where files being dragged from the desktop would land (drives the drop overlays). */
+  dropTarget: "agent" | "terminal" | "main" | null;
   setRoot: (root: string) => void;
   openTab: (tab: Tab) => void;
   closeTab: (id: string) => void;
@@ -137,7 +141,6 @@ export const useWorkspace = create<Workspace>((set, get) => ({
   tabs: [],
   activeId: null,
   sidebar: "explorer",
-  aiOpen: true,
   paletteOpen: false,
   paletteInitial: "",
   settingsOpen: false,
@@ -146,6 +149,7 @@ export const useWorkspace = create<Workspace>((set, get) => ({
   git: null,
   explorerRoot: "",
   renamingId: null,
+  dropTarget: null,
   setRoot: (root) => {
     set({ root, explorerRoot: root, detectedUrls: [], git: null });
     const s = useSettings.getState();
@@ -203,6 +207,13 @@ export function mediaKind(path: string): "image" | "pdf" | null {
   if (ext === "pdf") return "pdf";
   return IMAGE_EXT.has(ext) ? "image" : null;
 }
+
+/** Ctrl+I / the "Agent" button: show the panel, or close it when it is already open. */
+export const toggleAgent = () => {
+  const s = useSettings.getState();
+  s.set({ agentPanel: s.agentPanel === "open" ? "closed" : "open" });
+};
+export const openAgent = () => useSettings.getState().set({ agentPanel: "open" });
 
 export type TaskItem = { id: string; text: string; status: "pending" | "in_progress" | "done" };
 

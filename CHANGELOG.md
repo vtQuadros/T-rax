@@ -3,6 +3,21 @@
 Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
 
+## [0.2.3] - 2026-10-20
+
+### Novo
+- Painel do agente com **minimizar** (vira uma faixa fina à direita; um clique reabre) e **fechar**.
+  Reabra pelo ícone do agente na barra lateral, pelo botão "Agent", com `Ctrl+I` ou pela paleta. O app
+  lembra como você deixou o painel. A faixa minimizada avisa quando o agente está trabalhando ou
+  esperando sua revisão.
+- **Arrastar arquivos** do sistema para o T-rax:
+  - no painel do agente, viram anexos da mensagem (borda verde ao arrastar);
+  - no terminal, o caminho é colado entre aspas;
+  - no resto da janela, o arquivo abre numa aba (imagem e PDF no visualizador, código no editor).
+- **Anexos no agente**, por arrastar ou pelo clipe no campo de mensagem: imagens (png, jpg, gif, webp,
+  até 5 MB) vão como imagem para modelos com visão; PDFs têm o texto extraído (funciona com qualquer
+  modelo, inclusive locais); arquivos de texto e código vão com o conteúdo.
+
 ## [0.2.2] - 2026-10-20
 
 ### Novo

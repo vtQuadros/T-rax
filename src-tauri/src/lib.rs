@@ -81,6 +81,7 @@ pub fn run() {
             fs::fs_search,
             fs::fs_grep,
             fs::fs_stat,
+            fs::fs_read_base64,
             fs::media_allow,
             fs::open_default,
             git::git_status,

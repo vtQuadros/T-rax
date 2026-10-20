@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { editors } from "@/components/EditorView";
 import { ipc, joinPath, relPath } from "@/lib/ipc";
 import { newId, useSettings, useTasks, useWorkspace } from "@/lib/store";
+import { type Attachment, prepareAttachments, toAttachment } from "./attachments";
 import { chat, type Msg, type ToolCall } from "./providers";
 import { type Approval, executeTool, type PendingEdit, READ_TOOLS, WRITE_TOOLS } from "./tools";
 
@@ -9,7 +10,7 @@ export type ToolRun = { call: ToolCall; result?: string; editId?: string; approv
 
 /** Display items; `messages` holds the raw provider transcript. */
 export type ChatItem =
-  | { id: string; kind: "user"; text: string }
+  | { id: string; kind: "user"; text: string; files?: string[] }
   | { id: string; kind: "assistant"; text: string }
   | { id: string; kind: "tool"; run: ToolRun }
   | { id: string; kind: "error"; text: string };
@@ -21,6 +22,10 @@ type ChatState = {
   edits: Record<string, PendingEdit>;
   approvals: Record<string, Approval>;
   autoApprove: boolean;
+  /** Files waiting to go out with the next message (drag & drop or the paperclip). */
+  attachments: Attachment[];
+  addAttachments: (paths: string[]) => Promise<void>;
+  removeAttachment: (id: string) => void;
   send: (text: string) => Promise<void>;
   stop: () => void;
   reset: () => void;
@@ -117,14 +122,26 @@ export const useChat = create<ChatState>((set, get) => {
     edits: {},
     approvals: {},
     autoApprove: false,
+    attachments: [],
+    async addAttachments(paths) {
+      const known = new Set(get().attachments.map((a) => a.path));
+      const added = (await Promise.all(paths.filter((p) => !known.has(p)).map(toAttachment))).filter((a): a is Attachment => !!a);
+      if (added.length) set((s) => ({ attachments: [...s.attachments, ...added] }));
+    },
+    removeAttachment: (id) => set((s) => ({ attachments: s.attachments.filter((a) => a.id !== id) })),
     set: (p) => set(p),
 
     async send(raw) {
-      const text = expandSnippet(raw.trim());
+      const atts = get().attachments;
+      const text = expandSnippet(raw.trim()) || (atts.length ? "Take a look at the attached files." : "");
       if (!text || get().running) return;
       const settings = useSettings.getState().ai;
-      addItem({ id: newId("u"), kind: "user", text: raw.trim() });
-      const messages: Msg[] = [...get().messages, { role: "user", content: text + editorContext() }];
+      addItem({ id: newId("u"), kind: "user", text: raw.trim(), files: atts.map((a) => a.name) });
+      // Busy before the (possibly slow) PDF extraction so a second Enter can't double-send.
+      set({ attachments: [], running: true });
+      const files = atts.length ? await prepareAttachments(atts) : { text: "", images: [] };
+      const content = text + (files.text ? `\n\n${files.text}` : "") + editorContext();
+      const messages: Msg[] = [...get().messages, { role: "user", content, images: files.images.length ? files.images : undefined }];
       set({ messages, running: true });
       controller = new AbortController();
       const signal = controller.signal;
@@ -178,7 +195,7 @@ export const useChat = create<ChatState>((set, get) => {
 
     reset() {
       get().stop();
-      set({ items: [], messages: [], edits: {}, approvals: {} });
+      set({ items: [], messages: [], edits: {}, approvals: {}, attachments: [] });
     },
 
     async resolveEdit(id, accept) {
