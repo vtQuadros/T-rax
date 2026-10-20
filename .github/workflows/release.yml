@@ -52,6 +52,12 @@ jobs:
             on { print }
           ' CHANGELOG.md > notes.md
           if [ ! -s notes.md ]; then echo "::error::CHANGELOG.md has no section for [$ver]"; exit 1; fi
+          # "(LTS)" in the section header marks a long-term-support (stable) release.
+          if grep -E "^## \[$ver\]" CHANGELOG.md | grep -q "LTS"; then
+            echo "RELEASE_TITLE=T-rax $VERSION LTS" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TITLE=T-rax $VERSION" >> "$GITHUB_ENV"
+          fi
           printf '\n---\n**Instalar:** `sudo apt install ./T-rax_%s_amd64.deb` ou baixe o AppImage. Todas as versões: https://github.com/%s/releases\n' "$ver" "$GITHUB_REPOSITORY" >> notes.md
 
       - name: Build, sign and publish
@@ -62,7 +68,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: T-rax ${{ github.ref_name }}
+          releaseName: ${{ env.RELEASE_TITLE }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
@@ -79,4 +85,4 @@ jobs:
           sha256sum "deb/T-rax_${ver}_amd64.deb" "appimage/T-rax_${ver}_amd64.AppImage" | sed 's#  [a-z]*/#  #' > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "$VERSION" SHA256SUMS.txt T-rax_amd64.deb T-rax_amd64.AppImage --clobber -R "$GITHUB_REPOSITORY"
-          gh release edit "$VERSION" --notes-file "$GITHUB_WORKSPACE/notes.md" -R "$GITHUB_REPOSITORY"
+          gh release edit "$VERSION" --title "$RELEASE_TITLE" --notes-file "$GITHUB_WORKSPACE/notes.md" -R "$GITHUB_REPOSITORY"

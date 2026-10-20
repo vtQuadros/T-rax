@@ -40,6 +40,20 @@ scripts/install-linux.sh
 
 (`scripts/install-linux.sh --uninstall` remove.)
 
+## Versões
+
+A partir da **1.0.0 (LTS)** o T-rax segue números `MAJOR.MINOR.PATCH`:
+
+| Mudança | Exemplo | Quando |
+| --- | --- | --- |
+| Correção | `1.0.0` → `1.0.1` | só conserta bugs |
+| Recurso novo | `1.0.1` → `1.1.0` | adiciona algo sem quebrar o que existe |
+| Mudança grande | `1.4.2` → `2.0.0` | muda comportamento ou remove algo |
+
+Versões **LTS** são as estáveis recomendadas. Para marcar uma versão como LTS, escreva `(LTS)` no título
+da seção dela no `CHANGELOG.md` (ex.: `## [1.2.0] - 2026-12-01 (LTS)`): a release sai como
+"T-rax v1.2.0 LTS" automaticamente.
+
 ## Lançando uma versão
 
 1. Descreva a versão no `CHANGELOG.md`, numa seção `## [0.3.0] - AAAA-MM-DD`.
