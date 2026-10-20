@@ -8,9 +8,13 @@ const files: Record<string, string> = {
   "/demo/package.json": '{\n  "name": "demo",\n  "scripts": { "dev": "vite" }\n}\n',
   "/demo/TRAX.md": "# Project memory\n\n- Use TypeScript strict mode.\n",
 };
+// Binary fixtures served by the dev server from $DEV_FIXTURES (see vite.config.ts).
+const media = ["/demo/media/spec.pdf", "/demo/media/logo.png", "/demo/media/icon.svg"];
 
 export function installMockIpc() {
   mockIPC((cmd, args: any) => {
+    if (cmd === "fs_stat") return { size: 1024, modified: 1 };
+    if (cmd === "media_allow" || cmd === "open_default") return null;
     switch (cmd) {
       case "workspace_home":
         return "/demo";
@@ -19,7 +23,7 @@ export function installMockIpc() {
       case "fs_read_dir": {
         const dir = args.path.replace(/\/$/, "");
         const names = new Map<string, boolean>();
-        for (const p of Object.keys(files)) {
+        for (const p of [...Object.keys(files), ...media]) {
           if (!p.startsWith(dir + "/")) continue;
           const rest = p.slice(dir.length + 1).split("/");
           names.set(rest[0], rest.length > 1);
@@ -66,4 +70,5 @@ export function installMockIpc() {
         return null;
     }
   });
+  (window as any).__TAURI_INTERNALS__.convertFileSrc = (path: string) => `/__dev_file?name=${encodeURIComponent(path.split("/").pop()!)}`;
 }

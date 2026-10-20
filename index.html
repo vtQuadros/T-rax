@@ -15,7 +15,8 @@
             window.__TAURI_INTERNALS__?.invoke("log_js", { level, message });
           } catch {}
           try {
-            if (location.port === "1420") fetch("/__log", { method: "POST", body: level + ": " + message });
+            // Swallow failures: a rejected fetch would re-enter this handler and loop forever.
+            if (location.port === "1420") fetch("/__log", { method: "POST", body: level + ": " + message }).catch(() => {});
           } catch {}
         };
         send("info", "html loaded " + location.href);

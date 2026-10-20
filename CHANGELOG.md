@@ -12,6 +12,15 @@ Todas as versões do T-rax. Cada uma tem sua página em
 - Abas renomeáveis: duplo clique no nome (ou botão direito → Rename, ou `F2`). Enter salva, Esc cancela,
   nome vazio volta ao padrão. Também na paleta: *Rename Tab*.
 - Botão direito na aba: Rename, Close e Close Others.
+- **Imagens e PDFs** abrem numa aba de visualização em vez do erro "binary file" ([#4](https://github.com/vtQuadros/T-rax/issues/4)):
+  - Imagens (png, jpg, gif, webp, avif, bmp, ico, svg): ajustar à tela, 100%, `+`/`−`, `Ctrl` + scroll,
+    arrastar quando ampliada, fundo xadrez para transparência, dimensões e tamanho; SVG com *View source*.
+  - PDFs (pdf.js): rolagem contínua, página X de Y com "ir para página", zoom e ajustar à largura, texto
+    selecionável e busca com destaque (`Ctrl+F`, Enter/Shift+Enter entre resultados). Só as páginas
+    visíveis são renderizadas, então PDFs grandes abrem rápido.
+  - Recarregam sozinhos quando o arquivo muda no disco; botão para abrir no app padrão do sistema.
+  - Cada arquivo aberto é liberado individualmente para a interface (sem expor pastas inteiras).
+- Explorer: "Open in System App" no menu de botão direito.
 
 ## [0.2.1] - 2026-10-20
 

@@ -157,6 +157,7 @@ export function Explorer() {
       items.push(
         { label: "Rename", hint: "F2", run: () => setDraft({ kind: "rename", parent: dirname(e.path), target: e.path }) },
         { label: "Copy Path", run: () => void navigator.clipboard.writeText(e.path) },
+        { label: "Open in System App", run: () => void ipc.openDefault(e.path) },
         { label: "Delete", hint: "Del", danger: true, run: () => void remove(e.path) },
       );
     }

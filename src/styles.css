@@ -220,3 +220,66 @@ textarea:focus-visible {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Transparent pixels in the image viewer. */
+.checkerboard {
+  background-color: #1a1f1c;
+  background-image:
+    linear-gradient(45deg, #232926 25%, transparent 25%),
+    linear-gradient(-45deg, #232926 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #232926 75%),
+    linear-gradient(-45deg, transparent 75%, #232926 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+/* pdf.js text layer: invisible, selectable text positioned over the canvas
+   (subset of pdfjs-dist/web/pdf_viewer.css). */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  transform-origin: 0 0;
+  forced-color-adjust: none;
+  z-index: 0;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent {
+  display: contents;
+}
+.textLayer ::selection {
+  background: rgb(96 165 250 / 0.35);
+  color: transparent;
+}
+.textLayer br::selection {
+  background: transparent;
+}
+::highlight(pdf-search) {
+  background-color: rgb(251 191 36 / 0.45);
+  color: transparent;
+}

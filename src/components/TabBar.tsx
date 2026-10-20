@@ -1,4 +1,4 @@
-import { Bot, FileDiff, GitCommit, Globe, PanelRight, Plus, SquareTerminal, X } from "lucide-react";
+import { Bot, FileDiff, FileText, GitCommit, Globe, Image, PanelRight, Plus, SquareTerminal, X } from "lucide-react";
 import { useState } from "react";
 import { type Tab, useWorkspace } from "@/lib/store";
 import { FileIcon } from "./FileIcon";
@@ -18,6 +18,8 @@ function TabIcon({ tab }: { tab: Tab }) {
       return <GitCommit size={14} strokeWidth={1.8} />;
     case "aiDiff":
       return <Bot size={14} strokeWidth={1.8} />;
+    case "media":
+      return tab.media === "pdf" ? <FileText size={14} strokeWidth={1.8} /> : <Image size={14} strokeWidth={1.8} />;
   }
 }
 
@@ -144,7 +146,7 @@ export function TabBar() {
 
 function defaultTitle(t: Tab) {
   if (t.kind === "terminal") return t.cwd.split("/").pop() || "Terminal";
-  if (t.kind === "editor") return t.path.split("/").pop() || t.title;
+  if (t.kind === "editor" || t.kind === "media") return t.path.split("/").pop() || t.title;
   if (t.kind === "preview") return t.url.replace(/^https?:\/\//, "");
   return t.title;
 }

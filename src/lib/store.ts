@@ -87,6 +87,7 @@ export const useSettings = create<Settings & { set: (p: Partial<Settings>) => vo
 export type Tab =
   | { id: string; kind: "terminal"; title: string; cwd: string }
   | { id: string; kind: "editor"; title: string; path: string; dirty?: boolean; line?: number }
+  | { id: string; kind: "media"; title: string; path: string; media: "image" | "pdf" }
   | { id: string; kind: "preview"; title: string; url: string }
   | { id: string; kind: "diff"; title: string; root: string; path: string; staged: boolean }
   | { id: string; kind: "commit"; title: string; root: string; hash: string }
@@ -120,7 +121,8 @@ type Workspace = {
   closeTab: (id: string) => void;
   setActive: (id: string) => void;
   updateTab: (id: string, patch: Partial<Tab>) => void;
-  openFile: (path: string, line?: number) => void;
+  /** Images and PDFs open in a viewer; `asText` forces the code editor (e.g. SVG source). */
+  openFile: (path: string, line?: number, asText?: boolean) => void;
   openTerminal: (cwd?: string) => void;
   openPreview: (url: string) => void;
   setSidebar: (p: SidebarPanel) => void;
@@ -159,14 +161,22 @@ export const useWorkspace = create<Workspace>((set, get) => ({
     }),
   setActive: (id) => set({ activeId: id }),
   updateTab: (id, patch) => set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? ({ ...t, ...patch } as Tab) : t)) })),
-  openFile: (path, line) => {
+  openFile: (path, line, asText) => {
+    const media = asText ? null : mediaKind(path);
+    if (media) {
+      const open = get().tabs.find((t) => t.kind === "media" && t.path === path);
+      if (open) return set({ activeId: open.id });
+      return get().openTab({ id: newId("m"), kind: "media", title: basename(path), path, media });
+    }
     const existing = get().tabs.find((t) => t.kind === "editor" && t.path === path);
     if (existing) {
       set({ activeId: existing.id });
       if (line) get().updateTab(existing.id, { line } as Partial<Tab>);
       return;
     }
-    get().openTab({ id: newId("e"), kind: "editor", title: basename(path), path, line });
+    // Source view of an image (SVG) gets its own name next to the viewer tab.
+    const title = asText && mediaKind(path) ? `${basename(path)} · source` : basename(path);
+    get().openTab({ id: newId("e"), kind: "editor", title, path, line });
   },
   openTerminal: (cwd) => {
     const n = get().tabs.filter((t) => t.kind === "terminal").length + 1;
@@ -185,6 +195,14 @@ export const useWorkspace = create<Workspace>((set, get) => ({
 }));
 
 export const NO_TASKS: TaskItem[] = [];
+
+const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg"]);
+
+export function mediaKind(path: string): "image" | "pdf" | null {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "pdf") return "pdf";
+  return IMAGE_EXT.has(ext) ? "image" : null;
+}
 
 export type TaskItem = { id: string; text: string; status: "pending" | "in_progress" | "done" };
 

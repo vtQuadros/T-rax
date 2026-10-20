@@ -11,6 +11,8 @@ import { CommandPalette, type PaletteCommand } from "./components/CommandPalette
 import { CommitView, DiffView } from "./components/DiffView";
 import { EditorPane } from "./components/EditorView";
 import { Explorer } from "./components/Explorer";
+import { ImageView } from "./components/media/ImageView";
+import { PdfView } from "./components/media/PdfView";
 import { PreviewView } from "./components/PreviewView";
 import { SearchPanel } from "./components/SearchPanel";
 import { SettingsModal } from "./components/SettingsModal";
@@ -171,6 +173,8 @@ function TabContent({ tab, active }: { tab: Tab; active: boolean }) {
       return <CommitView root={tab.root} hash={tab.hash} />;
     case "aiDiff":
       return <AiDiffView editId={tab.editId} />;
+    case "media":
+      return tab.media === "pdf" ? <PdfView path={tab.path} active={active} /> : <ImageView path={tab.path} active={active} />;
   }
 }
 

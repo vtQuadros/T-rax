@@ -203,3 +203,39 @@ pub async fn fs_grep(
     }
     Ok(out)
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileStat {
+    size: u64,
+    /// Milliseconds since the Unix epoch; used to reload viewers when a file changes.
+    modified: u64,
+}
+
+#[tauri::command]
+pub async fn fs_stat(path: String) -> Result<FileStat, String> {
+    let meta = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+    let modified = meta
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0);
+    Ok(FileStat { size: meta.len(), modified })
+}
+
+/// Lets the webview load exactly this file through the asset protocol (image and
+/// PDF viewers), instead of exposing whole directories up front.
+#[tauri::command]
+pub fn media_allow(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri::Manager;
+    if !Path::new(&path).is_file() {
+        return Err("not a file".into());
+    }
+    app.asset_protocol_scope().allow_file(&path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn open_default(path: String) -> Result<(), String> {
+    tauri_plugin_opener::open_path(path, None::<&str>).map_err(|e| e.to_string())
+}
