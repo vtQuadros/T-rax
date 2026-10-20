@@ -3,7 +3,7 @@
 Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
 
-## [0.2.1] - 2026-10-19
+## [0.2.1] - 2026-10-20
 
 ### Corrigido
 - Explorer e listas voltam ao design: só texto, setas nas pastas e status do git à direita.
