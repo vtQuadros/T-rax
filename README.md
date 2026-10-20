@@ -47,7 +47,8 @@ Dá para baixar e instalar qualquer uma, inclusive voltar para uma anterior.
 
 | Versão | Data | Destaques | Downloads |
 | --- | --- | --- | --- |
-| [**v0.2.0**](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.0) | 19/10/2026 | Atualização automática, visual novo minimalista | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.AppImage) |
+| [**v0.2.1**](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.1) | 20/10/2026 | Explorer só texto como no design, janela abre maximizada | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.AppImage) |
+| [v0.2.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.0) | 19/10/2026 | Atualização automática, visual novo minimalista | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.AppImage) |
 | [v0.1.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.1.0) | 17/10/2026 | Primeira versão | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) |
 
 O histórico completo de mudanças está no [CHANGELOG](https://github.com/vtQuadros/T-rax/blob/Linux/CHANGELOG.md).
