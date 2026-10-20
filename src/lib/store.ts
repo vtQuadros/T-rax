@@ -25,6 +25,8 @@ export type Settings = {
   vim: boolean;
   showHidden: boolean;
   coloredIcons: boolean;
+  /** The explorer shows the active terminal's current directory. */
+  followTerminal: boolean;
   autoUpdateCheck: boolean;
   skippedVersion: string;
   bgImage: string;
@@ -43,6 +45,7 @@ const DEFAULT_SETTINGS: Settings = {
   vim: false,
   showHidden: false,
   coloredIcons: false,
+  followTerminal: true,
   autoUpdateCheck: true,
   skippedVersion: "",
   bgImage: "",
@@ -108,6 +111,10 @@ type Workspace = {
   fsVersion: number;
   /** Latest `git status` of the workspace, shared by the rail, explorer and status bar. */
   git: GitStatus | null;
+  /** Directory shown in the explorer; follows the active terminal's `cd`. */
+  explorerRoot: string;
+  /** Tab whose title is being edited inline (double-click, context menu or palette). */
+  renamingId: string | null;
   setRoot: (root: string) => void;
   openTab: (tab: Tab) => void;
   closeTab: (id: string) => void;
@@ -135,8 +142,10 @@ export const useWorkspace = create<Workspace>((set, get) => ({
   detectedUrls: [],
   fsVersion: 0,
   git: null,
+  explorerRoot: "",
+  renamingId: null,
   setRoot: (root) => {
-    set({ root, detectedUrls: [], git: null });
+    set({ root, explorerRoot: root, detectedUrls: [], git: null });
     const s = useSettings.getState();
     s.set({ recentWorkspaces: [root, ...s.recentWorkspaces.filter((r) => r !== root)].slice(0, 10) });
   },

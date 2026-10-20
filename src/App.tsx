@@ -244,6 +244,8 @@ export default function App() {
       { id: "term", label: "New Terminal", hint: "Ctrl+Shift+T", run: () => ws().openTerminal() },
       { id: "open", label: "Open Folder…", hint: "Ctrl+O", run: () => void pickFolder() },
       { id: "close", label: "Close Tab", hint: "Ctrl+Shift+W", run: () => ws().activeId && ws().closeTab(ws().activeId!) },
+      { id: "rename", label: "Rename Tab", hint: "F2 on tab", run: () => ws().activeId && ws().set({ renamingId: ws().activeId }) },
+      { id: "follow", label: "Toggle Explorer Follows Terminal", run: () => s().set({ followTerminal: !s().followTerminal }) },
       { id: "preview", label: "Open Web Preview", run: () => ws().openPreview(ws().detectedUrls[0] ?? "http://localhost:5173") },
       { id: "ai", label: "Toggle Agent Panel", hint: "Ctrl+I", run: () => ws().set({ aiOpen: !ws().aiOpen }) },
       { id: "newchat", label: "Agent: New Chat", run: () => useChat.getState().reset() },

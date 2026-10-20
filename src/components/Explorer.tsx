@@ -1,4 +1,4 @@
-import { ChevronRight, FilePlus, FolderPlus, RefreshCw } from "lucide-react";
+import { ChevronRight, FilePlus, FolderPlus, Link2, Link2Off, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { basename, type DirEntry, dirname, ipc, joinPath } from "@/lib/ipc";
 import { useSettings, useWorkspace } from "@/lib/store";
@@ -9,7 +9,9 @@ type Row = { entry: DirEntry; depth: number };
 type Draft = { kind: "file" | "dir" | "rename"; parent: string; target?: string };
 
 export function Explorer() {
-  const root = useWorkspace((s) => s.root);
+  // Follows the active terminal's directory (see TerminalView); falls back to the project.
+  const root = useWorkspace((s) => s.explorerRoot || s.root);
+  const follow = useSettings((s) => s.followTerminal);
   const fsVersion = useWorkspace((s) => s.fsVersion);
   const openFile = useWorkspace((s) => s.openFile);
   const openTerminal = useWorkspace((s) => s.openTerminal);
@@ -172,7 +174,14 @@ export function Explorer() {
 
   return (
     <div className="flex h-full flex-col">
-      <PanelHeader title={basename(root) || "Explorer"}>
+      <PanelHeader title={basename(root) || "/"} tooltip={root}>
+        <IconBtn
+          title={follow ? "Following the terminal (click to pin this folder)" : "Pinned (click to follow the terminal)"}
+          active={follow}
+          onClick={() => useSettings.getState().set({ followTerminal: !follow })}
+        >
+          {follow ? <Link2 size={14} strokeWidth={1.8} /> : <Link2Off size={14} strokeWidth={1.8} />}
+        </IconBtn>
         <IconBtn title="New File" onClick={() => setDraft({ kind: "file", parent: root })}>
           <FilePlus size={14} strokeWidth={1.8} />
         </IconBtn>
@@ -269,10 +278,12 @@ function GitMark({ status }: { status?: string }) {
   return <span className={`shrink-0 font-mono text-[11px] font-medium ${STATUS_COLOR[status] ?? "text-muted"}`}>{status}</span>;
 }
 
-export function PanelHeader({ title, children }: { title: string; children?: React.ReactNode }) {
+export function PanelHeader({ title, tooltip, children }: { title: string; tooltip?: string; children?: React.ReactNode }) {
   return (
     <div className="flex h-11 shrink-0 items-center justify-between pr-2 pl-4">
-      <span className="label truncate">{title}</span>
+      <span className="label truncate" title={tooltip}>
+        {title}
+      </span>
       <div className="flex items-center gap-0.5">{children}</div>
     </div>
   );

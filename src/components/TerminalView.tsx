@@ -18,6 +18,26 @@ export function TerminalView({ tabId, cwd, active }: { tabId: string; cwd: strin
   const host = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
+  const ptyIdRef = useRef<number | null>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const lastCwd = useRef(cwd);
+
+  /** Reads the shell's directory; the explorer follows it while this tab is active. */
+  const syncCwd = useRef(async (force = false) => {
+    const id = ptyIdRef.current;
+    if (id == null) return;
+    const dir = await ipc.ptyCwd(id).catch(() => null);
+    if (!dir) return;
+    const ws = useWorkspace.getState();
+    if (dir !== lastCwd.current) {
+      lastCwd.current = dir;
+      ws.updateTab(tabId, { cwd: dir });
+    }
+    if (activeRef.current && useSettings.getState().followTerminal && (force || ws.explorerRoot !== dir)) {
+      if (ws.explorerRoot !== dir) ws.set({ explorerRoot: dir });
+    }
+  });
   const themeId = useSettings((s) => s.appTheme);
   const custom = useSettings((s) => s.customThemes);
   const fontSize = useSettings((s) => s.fontSize);
@@ -55,6 +75,8 @@ export function TerminalView({ tabId, cwd, active }: { tabId: string; cwd: strin
       .ptyOpen(term.cols, term.rows, cwd, (e) => {
         if (e.type === "data") {
           term.write(e.data);
+          // A new prompt usually follows a finished command (e.g. `cd`).
+          if (e.data.includes("\n")) setTimeout(() => void syncCwd.current(), 120);
           const plain = e.data.replace(ANSI, "");
           for (const m of plain.matchAll(DEV_URL)) {
             useWorkspace.getState().addDetectedUrl(m[0].replace("0.0.0.0", "localhost").replace(/[.,)]+$/, ""));
@@ -66,6 +88,7 @@ export function TerminalView({ tabId, cwd, active }: { tabId: string; cwd: strin
       .then((id) => {
         if (disposed) return void ipc.ptyClose(id);
         ptyId = id;
+        ptyIdRef.current = id;
         for (const d of pending.splice(0)) void ipc.ptyWrite(id, d);
       })
       .catch((err) => term.write(`\x1b[31mFailed to start shell: ${err}\x1b[0m\r\n`));
@@ -100,12 +123,15 @@ export function TerminalView({ tabId, cwd, active }: { tabId: string; cwd: strin
   }, [themeId, custom, fontSize]);
 
   useEffect(() => {
-    if (active) {
-      requestAnimationFrame(() => {
-        fitRef.current?.fit();
-        termRef.current?.focus();
-      });
-    }
+    if (!active) return;
+    requestAnimationFrame(() => {
+      fitRef.current?.fit();
+      termRef.current?.focus();
+    });
+    // Switching to this tab shows its directory; polling catches anything the prompt hook missed.
+    void syncCwd.current(true);
+    const t = setInterval(() => !document.hidden && void syncCwd.current(), 1000);
+    return () => clearInterval(t);
   }, [active]);
 
   return <div ref={host} className="h-full w-full" onClick={() => termRef.current?.focus()} />;

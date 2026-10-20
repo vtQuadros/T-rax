@@ -107,3 +107,54 @@ pub fn pty_close(state: State<'_, PtyState>, id: u32) {
         let _ = s.child.kill();
     }
 }
+
+/// Current directory of the shell running in this PTY, so the explorer can
+/// follow `cd`. Read from the process itself: works with any shell, no hooks.
+#[tauri::command]
+pub fn pty_cwd(state: State<'_, PtyState>, id: u32) -> Option<String> {
+    let pid = state.sessions.lock().unwrap().get(&id)?.child.process_id()?;
+    process_cwd(pid)
+}
+
+#[cfg(target_os = "linux")]
+fn process_cwd(pid: u32) -> Option<String> {
+    std::fs::read_link(format!("/proc/{pid}/cwd")).ok().map(|p| p.to_string_lossy().into_owned())
+}
+
+#[cfg(not(target_os = "linux"))]
+fn process_cwd(_pid: u32) -> Option<String> {
+    None
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use super::*;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn follows_cd_in_a_real_shell() {
+        let pair = native_pty_system().openpty(PtySize { rows: 24, cols: 80, pixel_width: 0, pixel_height: 0 }).unwrap();
+        let mut cmd = CommandBuilder::new("bash");
+        cmd.args(["--norc", "--noprofile", "-i"]);
+        cmd.cwd(dirs::home_dir().unwrap());
+        let mut child = pair.slave.spawn_command(cmd).unwrap();
+        let pid = child.process_id().unwrap();
+        let mut reader = pair.master.try_clone_reader().unwrap();
+        std::thread::spawn(move || {
+            let mut buf = [0u8; 4096];
+            while matches!(reader.read(&mut buf), Ok(n) if n > 0) {}
+        });
+        let mut w = pair.master.take_writer().unwrap();
+
+        let home = dirs::home_dir().unwrap().canonicalize().unwrap().to_string_lossy().into_owned();
+        assert_eq!(process_cwd(pid).as_deref(), Some(home.as_str()));
+
+        w.write_all(b"cd /tmp\n").unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while process_cwd(pid).as_deref() != Some("/tmp") && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        assert_eq!(process_cwd(pid).as_deref(), Some("/tmp"));
+        let _ = child.kill();
+    }
+}

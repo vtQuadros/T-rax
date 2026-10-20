@@ -3,6 +3,16 @@
 Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
 
+## [0.2.2] - 2026-10-20
+
+### Novo
+- O explorer acompanha o terminal: um `cd ..` ou `cd /home` no terminal da aba ativa muda a pasta
+  mostrada à esquerda. Trocar de aba mostra a pasta daquele terminal. O botão de corrente no cabeçalho
+  do explorer liga e desliga esse comportamento.
+- Abas renomeáveis: duplo clique no nome (ou botão direito → Rename, ou `F2`). Enter salva, Esc cancela,
+  nome vazio volta ao padrão. Também na paleta: *Rename Tab*.
+- Botão direito na aba: Rename, Close e Close Others.
+
 ## [0.2.1] - 2026-10-20
 
 ### Corrigido

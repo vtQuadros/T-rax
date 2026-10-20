@@ -59,6 +59,9 @@ export function installMockIpc() {
         return { stdout: "", stderr: "", code: 0, timedOut: false };
       case "pty_open":
         return 1;
+      case "pty_cwd":
+        // The real backend reads /proc/<pid>/cwd of the shell.
+        return "/demo";
       default:
         return null;
     }

@@ -68,6 +68,7 @@ pub fn run() {
             pty::pty_write,
             pty::pty_resize,
             pty::pty_close,
+            pty::pty_cwd,
             fs::workspace_home,
             fs::workspace_launch_dir,
             fs::fs_read_dir,

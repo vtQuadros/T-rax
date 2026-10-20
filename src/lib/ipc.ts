@@ -35,6 +35,7 @@ export const ipc = {
   ptyWrite: (id: number, data: string) => invoke<void>("pty_write", { id, data }),
   ptyResize: (id: number, cols: number, rows: number) => invoke<void>("pty_resize", { id, cols, rows }),
   ptyClose: (id: number) => invoke<void>("pty_close", { id }),
+  ptyCwd: (id: number) => invoke<string | null>("pty_cwd", { id }),
 
   readDir: (path: string, showHidden = false) => invoke<DirEntry[]>("fs_read_dir", { path, showHidden }),
   readFile: (path: string) => invoke<string>("fs_read_file", { path }),

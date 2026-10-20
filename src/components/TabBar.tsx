@@ -29,6 +29,29 @@ export function TabBar() {
   const openTerminal = useWorkspace((s) => s.openTerminal);
   const aiOpen = useWorkspace((s) => s.aiOpen);
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const renamingId = useWorkspace((s) => s.renamingId);
+  const updateTab = useWorkspace((s) => s.updateTab);
+  const startRename = (id: string) => useWorkspace.getState().set({ renamingId: id });
+  const finishRename = (t: Tab, value: string | null) => {
+    useWorkspace.getState().set({ renamingId: null });
+    if (value == null) return;
+    const name = value.trim();
+    // An empty name restores the default one.
+    updateTab(t.id, { title: name || defaultTitle(t) });
+  };
+
+  const tabMenu = (e: React.MouseEvent, t: Tab) => {
+    e.preventDefault();
+    setMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: "Rename", hint: "Double-click", run: () => startRename(t.id) },
+        { label: "Close", hint: "Ctrl+Shift+W", run: () => closeTab(t.id) },
+        { label: "Close Others", run: () => tabs.filter((x) => x.id !== t.id).forEach((x) => closeTab(x.id)) },
+      ],
+    });
+  };
 
   const newMenu = (e: React.MouseEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -58,7 +81,11 @@ export function TabBar() {
               role="tab"
               aria-selected={active}
               tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setActive(t.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setActive(t.id);
+                if (e.key === "F2") startRename(t.id);
+              }}
+              onContextMenu={(e) => tabMenu(e, t)}
               onMouseDown={(e) => {
                 if (e.button === 1) {
                   e.preventDefault();
@@ -73,7 +100,13 @@ export function TabBar() {
               <span className={active ? "text-fg-soft" : "text-dim"}>
                 <TabIcon tab={t} />
               </span>
-              <span className="truncate">{t.title}</span>
+              {renamingId === t.id ? (
+                <RenameInput initial={t.title} onDone={(v) => finishRename(t, v)} />
+              ) : (
+                <span className="truncate" onDoubleClick={() => startRename(t.id)} title="Double-click to rename">
+                  {t.title}
+                </span>
+              )}
               <button
                 aria-label={`Close ${t.title}`}
                 onMouseDown={(e) => e.stopPropagation()}
@@ -106,5 +139,34 @@ export function TabBar() {
       </button>
       {menu && <ContextMenu {...menu} onClose={() => setMenu(null)} />}
     </div>
+  );
+}
+
+function defaultTitle(t: Tab) {
+  if (t.kind === "terminal") return t.cwd.split("/").pop() || "Terminal";
+  if (t.kind === "editor") return t.path.split("/").pop() || t.title;
+  if (t.kind === "preview") return t.url.replace(/^https?:\/\//, "");
+  return t.title;
+}
+
+function RenameInput({ initial, onDone }: { initial: string; onDone: (v: string | null) => void }) {
+  const [v, setV] = useState(initial);
+  return (
+    <input
+      autoFocus
+      aria-label="Tab name"
+      value={v}
+      size={Math.max(6, v.length + 1)}
+      onChange={(e) => setV(e.target.value)}
+      onFocus={(e) => e.target.select()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") onDone(v);
+        if (e.key === "Escape") onDone(null);
+      }}
+      onBlur={() => onDone(v)}
+      className="h-6 max-w-44 min-w-0 rounded-md border border-accent/60 bg-elevated px-1.5 text-[13px] font-medium text-fg outline-none"
+    />
   );
 }
