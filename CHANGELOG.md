@@ -2,8 +2,13 @@
 
 Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
+Versões marcadas com **(LTS)** são as estáveis recomendadas.
 
-## [0.2.3] - 2026-10-20
+## [1.0.0] - 2026-10-20 (LTS)
+
+Primeira versão estável do T-rax, marcada como **LTS**: é a versão recomendada para uso no dia a dia.
+Reúne tudo das versões 0.x (terminal, editor, git, agente de IA, visualizador de imagens e PDFs,
+atualização automática) com as novidades abaixo.
 
 ### Novo
 - Painel do agente com **minimizar** (vira uma faixa fina à direita; um clique reabre) e **fechar**.
