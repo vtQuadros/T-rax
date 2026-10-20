@@ -31,7 +31,7 @@ e o código aberto dele. Não é afiliado ao Terax.
 
 ## Downloads
 
-**Versão mais recente** (os links sempre apontam para a última versão lançada):
+**Versão mais recente: v1.0.0 LTS** (os links sempre apontam para a última versão lançada):
 
 | Sistema | Arquivo | Como instalar |
 | --- | --- | --- |
@@ -47,10 +47,14 @@ Dá para baixar e instalar qualquer uma, inclusive voltar para uma anterior.
 
 | Versão | Data | Destaques | Downloads |
 | --- | --- | --- | --- |
-| [**v0.2.2**](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.2) | 20/10/2026 | Imagens e PDFs, explorer segue o terminal, abas renomeáveis | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.AppImage) |
+| [**v1.0.0 LTS**](https://github.com/vtQuadros/T-rax/releases/tag/v1.0.0) | 20/10/2026 | Primeira versão estável: agente minimizável, arrastar arquivos, anexos no agente | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.AppImage) |
+| [v0.2.2](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.2) | 20/10/2026 | Imagens e PDFs, explorer segue o terminal, abas renomeáveis | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.AppImage) |
 | [v0.2.1](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.1) | 20/10/2026 | Explorer só texto como no design, janela abre maximizada | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.AppImage) |
 | [v0.2.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.0) | 19/10/2026 | Atualização automática, visual novo minimalista | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.AppImage) |
 | [v0.1.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.1.0) | 17/10/2026 | Primeira versão | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) |
+
+**LTS** marca as versões estáveis recomendadas para o dia a dia. As versões seguem `MAJOR.MINOR.PATCH`:
+`1.0.1` corrige bugs, `1.1.0` traz recursos novos e `2.0.0` traz mudanças grandes.
 
 O histórico completo de mudanças está no [CHANGELOG](https://github.com/vtQuadros/T-rax/blob/Linux/CHANGELOG.md).
 
@@ -69,6 +73,8 @@ O histórico completo de mudanças está no [CHANGELOG](https://github.com/vtQua
 - **Planos e tarefas** — lista de tarefas compartilhada entre você e o agente.
 - **Imagens e PDFs** — abrem numa aba com zoom; PDFs com busca, texto selecionável e páginas sob demanda.
 - **Snippets** — prompts reutilizáveis chamados com `/nome` no chat.
+- **Anexos e arrastar arquivos** — solte imagens, PDFs ou código no agente para anexar; no terminal para
+  colar o caminho; no resto da janela para abrir. O painel do agente pode ser minimizado ou fechado.
 - **Preview web** — detecta servidores de dev (Vite, Next, Astro…) no terminal e abre numa aba.
 - **Temas** — 10 paletas, tema do editor independente, temas personalizados (exporta/importa JSON) e
   imagem de fundo com opacidade e blur.
