@@ -1,8 +1,7 @@
 use serde::Serialize;
-use tokio::process::Command;
 
 async fn git(cwd: &str, args: &[&str]) -> Result<String, String> {
-    let out = Command::new("git")
+    let out = crate::platform::command("git")
         .args(args)
         .current_dir(cwd)
         .env("GIT_TERMINAL_PROMPT", "0")
@@ -214,7 +213,7 @@ pub async fn git_apply(root: String, patch: String, cached: bool, reverse: bool)
         args.push("--reverse");
     }
     args.push("-");
-    let mut child = Command::new("git")
+    let mut child = crate::platform::command("git")
         .args(&args)
         .current_dir(&root)
         .stdin(std::process::Stdio::piped())

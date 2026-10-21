@@ -24,14 +24,14 @@ import { TasksPanel } from "./components/TasksPanel";
 import { terminals, TerminalView } from "./components/TerminalView";
 import { UpdateToast } from "./components/UpdateToast";
 import { Kbd, Logo } from "./components/ui";
-import { basename, ipc } from "./lib/ipc";
+import { basename, IS_WINDOWS, ipc, isAbsolute, shortHome, toPosix } from "./lib/ipc";
 import { openAgent, type SidebarPanel, type Tab, toggleAgent, useSettings, useWorkspace } from "./lib/store";
 import { applyTheme, findTheme } from "./lib/themes";
 import { checkForUpdate, initUpdater } from "./lib/updater";
 
 async function pickFolder() {
   const dir = await openDialog({ directory: true, multiple: false });
-  if (typeof dir === "string") switchWorkspace(dir);
+  if (typeof dir === "string") switchWorkspace(toPosix(dir));
 }
 
 function switchWorkspace(dir: string) {
@@ -44,7 +44,8 @@ function switchWorkspace(dir: string) {
 }
 
 /** Shell-safe single quoting for paths pasted into a terminal. */
-const shellQuote = (p: string) => `'${p.replace(/'/g, "'\\''")}'`;
+// PowerShell escapes ' by doubling it; POSIX shells close, escape and reopen the quote.
+const shellQuote = (p: string) => (IS_WINDOWS ? `'${p.replace(/'/g, "''")}'` : `'${p.replace(/'/g, "'\\''")}'`);
 
 /**
  * Files dragged in from the desktop: onto the agent they become attachments,
@@ -71,9 +72,11 @@ function useFileDrop() {
         if (p.type !== "drop") return ws.set({ dropTarget: zone?.kind ?? null });
         ws.set({ dropTarget: null });
         if (!zone || !p.paths.length) return;
-        if (zone.kind === "agent") return void useChat.getState().addAttachments(p.paths);
+        const paths = p.paths.map(toPosix);
+        if (zone.kind === "agent") return void useChat.getState().addAttachments(paths);
+        // The terminal gets the OS spelling of the path (backslashes on Windows).
         if (zone.kind === "terminal" && zone.tabId) return terminals.get(zone.tabId)?.write(`${p.paths.map(shellQuote).join(" ")} `);
-        for (const path of p.paths) {
+        for (const path of paths) {
           const st = await ipc.stat(path).catch(() => null);
           if (st && !st.isDir) ws.openFile(path); // folders are skipped
         }
@@ -252,7 +255,7 @@ function Welcome() {
                 className="flex justify-between gap-3 px-3 py-1 text-left text-fg-soft hover:text-fg"
               >
                 <span className="truncate">{basename(r)}</span>
-                <span className="truncate font-mono text-[12px] text-dim">{r.replace(/^\/home\/[^/]+/, "~").replace(/\/[^/]*$/, "")}</span>
+                <span className="truncate font-mono text-[12px] text-dim">{shortHome(r).replace(/\/[^/]*$/, "")}</span>
               </button>
             ))}
           </div>
@@ -321,7 +324,7 @@ export default function App() {
         <div
           className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url("${bg.image.startsWith("/") ? convertFileSrc(bg.image) : bg.image}")`,
+            backgroundImage: `url("${isAbsolute(toPosix(bg.image)) ? convertFileSrc(bg.image) : bg.image}")`,
             opacity: bg.opacity,
             filter: `blur(${bg.blur}px)`,
           }}

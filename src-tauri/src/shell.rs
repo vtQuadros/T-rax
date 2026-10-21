@@ -1,6 +1,5 @@
 use serde::Serialize;
 use std::time::Duration;
-use tokio::process::Command;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,9 +27,9 @@ fn clip(bytes: &[u8]) -> String {
 /// Non-interactive command used by AI agents (`run_command` tool).
 #[tauri::command]
 pub async fn shell_run(command: String, cwd: String, timeout_secs: Option<u64>) -> Result<RunResult, String> {
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into());
-    let child = Command::new(shell)
-        .arg("-lc")
+    let (shell, lead) = crate::platform::command_shell();
+    let child = crate::platform::command(shell)
+        .args(lead)
         .arg(&command)
         .current_dir(&cwd)
         .stdin(std::process::Stdio::null())

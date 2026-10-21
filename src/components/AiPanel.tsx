@@ -6,7 +6,7 @@ import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type ChatItem, type ToolRun, useChat } from "@/ai/store";
-import { ipc, relPath } from "@/lib/ipc";
+import { ipc, relPath, toPosix } from "@/lib/ipc";
 import { NO_TASKS, newId, useSettings, useTasks, useWorkspace } from "@/lib/store";
 import { IconBtn } from "./Explorer";
 import { Button } from "./ui";
@@ -30,7 +30,7 @@ export function AiPanel() {
   const dropping = useWorkspace((s) => s.dropTarget === "agent");
   const pickFiles = async () => {
     const picked = await openDialog({ multiple: true, directory: false });
-    if (picked) void useChat.getState().addAttachments(Array.isArray(picked) ? picked : [picked]);
+    if (picked) void useChat.getState().addAttachments((Array.isArray(picked) ? picked : [picked]).map(toPosix));
   };
 
   useEffect(() => {

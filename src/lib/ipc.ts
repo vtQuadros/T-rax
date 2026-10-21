@@ -82,7 +82,18 @@ export const ipc = {
   aiCancel: (requestId: string) => invoke<void>("ai_cancel", { requestId }),
 };
 
+// Paths in the UI always use "/" (the backend converts Windows paths); paths that come
+// straight from the OS (file dialogs, drag & drop, the shell) go through toPosix first.
+export const IS_WINDOWS = typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent);
+export const toPosix = (p: string) => p.replace(/\\/g, "/");
+export const isAbsolute = (p: string) => p.startsWith("/") || /^[A-Za-z]:\//.test(p);
 export const basename = (p: string) => p.replace(/\/+$/, "").split("/").pop() || p;
-export const dirname = (p: string) => p.replace(/\/[^/]*\/?$/, "") || "/";
-export const joinPath = (a: string, b: string) => (b.startsWith("/") ? b : `${a.replace(/\/+$/, "")}/${b}`);
+export const dirname = (p: string) => {
+  const d = p.replace(/\/[^/]*\/?$/, "");
+  if (/^[A-Za-z]:$/.test(d)) return `${d}/`; // drive root, e.g. C:/
+  return d || "/";
+};
+export const joinPath = (a: string, b: string) => (isAbsolute(b) ? b : `${a.replace(/\/+$/, "")}/${b}`);
+/** Home folder shown as ~ (Linux /home/name, Windows C:/Users/name). */
+export const shortHome = (p: string) => p.replace(/^\/home\/[^/]+/, "~").replace(/^[A-Za-z]:\/Users\/[^/]+/i, "~");
 export const relPath = (root: string, p: string) => (p.startsWith(root + "/") ? p.slice(root.length + 1) : p);

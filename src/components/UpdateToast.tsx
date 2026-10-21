@@ -1,7 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { X } from "lucide-react";
 import { useEffect } from "react";
-import { checkForUpdate, debUrl, installUpdate, releaseUrl, skipVersion, useUpdate } from "@/lib/updater";
+import { checkForUpdate, debUrl, installUpdate, releaseUrl, selfUpdating, skipVersion, useUpdate } from "@/lib/updater";
 import { Button } from "./ui";
 
 export function UpdateToast() {
@@ -62,7 +62,7 @@ export function UpdateToast() {
             Skip
           </Button>
           <Button onClick={() => void openUrl(releaseUrl(u.version!))}>Notes</Button>
-          {u.kind === "appimage" ? (
+          {selfUpdating(u.kind) ? (
             <Button variant="primary" onClick={() => void installUpdate()}>
               Update &amp; restart
             </Button>

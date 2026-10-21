@@ -1,6 +1,7 @@
 mod ai;
 mod fs;
 mod git;
+mod platform;
 mod pty;
 mod shell;
 
@@ -32,6 +33,10 @@ pub(crate) fn decode_utf8_carry(carry: &mut Vec<u8>, chunk: &[u8]) -> String {
 /// an AppImage replaces its own file; a .deb belongs to the package manager.
 #[tauri::command]
 fn install_kind() -> &'static str {
+    // The NSIS installer's updater swaps the app in place, like the AppImage.
+    if cfg!(windows) {
+        return "windows";
+    }
     if std::env::var_os("APPIMAGE").is_some() {
         return "appimage";
     }

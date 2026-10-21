@@ -251,6 +251,7 @@ function SnippetSection() {
 
 const KIND_LABEL = {
   appimage: "AppImage: updates install themselves",
+  windows: "Windows installer: updates install themselves",
   deb: ".deb package: new versions are installed with apt",
   manual: "Built from source or installed by script",
 };

@@ -7,8 +7,11 @@ import { useSettings } from "./store";
 
 export const RELEASES_URL = "https://github.com/vtQuadros/T-rax/releases";
 
-/** appimage: replaces itself in place · deb: owned by apt, so we only point to the new .deb */
-export type InstallKind = "appimage" | "deb" | "manual";
+/** appimage / windows: replace themselves in place · deb: owned by apt, so we only point to the new .deb */
+export type InstallKind = "appimage" | "windows" | "deb" | "manual";
+
+/** Installs that can update themselves from inside the app. */
+export const selfUpdating = (k: InstallKind) => k === "appimage" || k === "windows";
 
 type UpdateState = {
   current: string;
@@ -70,7 +73,7 @@ export async function checkForUpdate(manual = true) {
   }
 }
 
-/** AppImage only: download, verify the signature, swap the file and restart. */
+/** AppImage and Windows: download, verify the signature, install and restart. */
 export async function installUpdate() {
   if (!pending) return;
   let total = 0;

@@ -4,6 +4,17 @@ Todas as versões do T-rax. Cada uma tem sua página em
 [Releases](https://github.com/vtQuadros/T-rax/releases), com o `.deb`, o AppImage e os checksums.
 Versões marcadas com **(LTS)** são as estáveis recomendadas.
 
+## [1.1.0] - 2026-10-21
+
+### Novo
+- **Versão para Windows 10/11** ([#3](https://github.com/vtQuadros/T-rax/issues/3)): instalador `.exe` sem precisar de
+  administrador, com atualização automática dentro do app.
+  - Terminal com PowerShell 7 (ou o Windows PowerShell, se o 7 não estiver instalado).
+  - O explorer acompanha o `cd` também no Windows: o prompt do PowerShell informa a pasta atual.
+  - Caminhos com letra de drive (`C:\`), comandos do git e do agente sem abrir janelas de console.
+- Cada release agora traz Linux (`.deb`, AppImage) e Windows (`.exe`) juntos.
+- O terminal também entende os avisos de pasta OSC 7, enviados por bash/zsh/fish com integração de shell.
+
 ## [1.0.0] - 2026-10-20 (LTS)
 
 Primeira versão estável do T-rax, marcada como **LTS**: é a versão recomendada para uso no dia a dia.

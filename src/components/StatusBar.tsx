@@ -1,6 +1,6 @@
 import { GitBranch } from "lucide-react";
 import { useEffect } from "react";
-import { ipc } from "@/lib/ipc";
+import { ipc, shortHome } from "@/lib/ipc";
 import { languageName } from "@/lib/lang";
 import { NO_TASKS, useSettings, useTasks, useWorkspace } from "@/lib/store";
 import { useUpdate } from "@/lib/updater";
@@ -47,7 +47,7 @@ export function StatusBar() {
           {git.behind > 0 && ` ↓${git.behind}`}
         </button>
       )}
-      <span className="truncate">{root.replace(/^\/home\/[^/]+/, "~")}</span>
+      <span className="truncate">{shortHome(root)}</span>
       {tasks.length > 0 && (
         <button className="hover:text-fg" onClick={() => useWorkspace.getState().setSidebar("tasks")}>
           tasks {done}/{tasks.length}

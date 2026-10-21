@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 use ignore::WalkBuilder;
 use serde::Serialize;
 
+use crate::platform::{canonical, path_str};
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirEntry {
@@ -23,23 +25,23 @@ const MAX_READ: u64 = 8 * 1024 * 1024;
 
 #[tauri::command]
 pub fn workspace_home() -> String {
-    dirs::home_dir().map(|p| p.to_string_lossy().into_owned()).unwrap_or_else(|| "/".into())
+    dirs::home_dir().map(|p| path_str(&p)).unwrap_or_else(|| "/".into())
 }
 
 /// First CLI argument that is a directory, else the process cwd (unless it is `/`).
 #[tauri::command]
 pub fn workspace_launch_dir() -> Option<String> {
     if let Some(arg) = std::env::args().skip(1).find(|a| Path::new(a).is_dir()) {
-        return PathBuf::from(arg).canonicalize().ok().map(|d| d.to_string_lossy().into_owned());
+        return canonical(&PathBuf::from(arg)).map(|d| path_str(&d));
     }
-    let dir = std::env::current_dir().ok()?.canonicalize().ok()?;
+    let dir = canonical(&std::env::current_dir().ok()?)?;
     // Launched from the app menu the cwd is `/` or $HOME; the frontend then
     // reopens the most recent workspace instead.
-    let home = dirs::home_dir().and_then(|h| h.canonicalize().ok());
+    let home = dirs::home_dir().and_then(|h| canonical(&h));
     if dir == Path::new("/") || Some(&dir) == home.as_ref() || dir.ends_with("src-tauri") {
         return None;
     }
-    Some(dir.to_string_lossy().into_owned())
+    Some(path_str(&dir))
 }
 
 #[tauri::command]
@@ -56,7 +58,7 @@ pub async fn fs_read_dir(path: String, show_hidden: Option<bool>) -> Result<Vec<
             let path = e.path();
             // Follow symlinks so linked dirs expand like real ones.
             let is_dir = path.is_dir();
-            Some(DirEntry { name, path: path.to_string_lossy().into_owned(), is_dir })
+            Some(DirEntry { name, path: path_str(&path), is_dir })
         })
         .collect();
     out.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase())));
@@ -129,7 +131,7 @@ pub async fn fs_search(root: String, query: String, limit: Option<usize>) -> Vec
         if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
             continue;
         }
-        let full = entry.path().to_string_lossy().into_owned();
+        let full = path_str(entry.path());
         let rel = full.strip_prefix(&root).unwrap_or(&full).trim_start_matches('/').to_owned();
         if let Some(score) = fuzzy_score(&rel.to_lowercase(), &q) {
             scored.push((score, full));
@@ -194,7 +196,7 @@ pub async fn fs_grep(
         for (i, line) in text.lines().enumerate() {
             if re.is_match(line) {
                 let text: String = line.trim().chars().take(240).collect();
-                out.push(GrepMatch { path: entry.path().to_string_lossy().into_owned(), line: i + 1, text });
+                out.push(GrepMatch { path: path_str(entry.path()), line: i + 1, text });
                 if out.len() >= limit {
                     return Ok(out);
                 }

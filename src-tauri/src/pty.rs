@@ -27,9 +27,6 @@ pub enum PtyEvent {
     Exit,
 }
 
-fn default_shell() -> String {
-    std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into())
-}
 
 #[tauri::command]
 pub fn pty_open(
@@ -43,13 +40,15 @@ pub fn pty_open(
         .openpty(PtySize { rows, cols, pixel_width: 0, pixel_height: 0 })
         .map_err(|e| e.to_string())?;
 
-    let mut cmd = CommandBuilder::new(default_shell());
+    let (shell, args) = crate::platform::interactive_shell();
+    let mut cmd = CommandBuilder::new(shell);
+    cmd.args(args);
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
     cmd.env("TERM_PROGRAM", "t-rax");
     let dir = cwd
         .filter(|d| std::path::Path::new(d).is_dir())
-        .or_else(|| dirs::home_dir().map(|h| h.to_string_lossy().into_owned()));
+        .or_else(|| dirs::home_dir().map(|h| crate::platform::path_str(&h)));
     if let Some(dir) = dir {
         cmd.cwd(dir);
     }

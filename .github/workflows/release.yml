@@ -1,6 +1,7 @@
 name: Release
 
-# Pushing a tag like v0.2.0 builds, signs and publishes that version.
+# Pushing a tag like v1.1.0 builds Linux and Windows in parallel into a draft release,
+# then publishes it with one latest.json for the in-app updater on both platforms.
 # Every version keeps its own release page, so older builds stay downloadable.
 on:
   push:
@@ -9,11 +10,14 @@ on:
 permissions:
   contents: write
 
+env:
+  VERSION: ${{ github.ref_name }}
+
 jobs:
-  linux:
-    runs-on: ubuntu-22.04 # older glibc: the AppImage also runs on older distros
-    env:
-      VERSION: ${{ github.ref_name }}
+  draft:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - uses: actions/checkout@v5
 
@@ -24,7 +28,49 @@ jobs:
             echo "::error::Tag $VERSION does not match package.json ($pkg)"; exit 1
           fi
 
-      - name: System packages
+      - name: Release notes and title from CHANGELOG.md
+        run: |
+          ver="${VERSION#v}"
+          awk -v v="$ver" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "::error::CHANGELOG.md has no section for [$ver]"; exit 1; fi
+          # "(LTS)" in the section header marks a long-term-support (stable) release.
+          if grep -E "^## \[$ver\]" CHANGELOG.md | grep -q "LTS"; then title="T-rax $VERSION LTS"; else title="T-rax $VERSION"; fi
+          echo "TITLE=$title" >> "$GITHUB_ENV"
+          printf '\n---\n**Instalar:** Linux: `sudo apt install ./T-rax_%s_amd64.deb` ou o AppImage · Windows: `T-rax_%s_x64-setup.exe`. Todas as versões: https://github.com/%s/releases\n' "$ver" "$ver" "$GITHUB_REPOSITORY" >> notes.md
+
+      - name: Create draft release
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$VERSION" --draft --verify-tag --title "$TITLE" --notes-file notes.md -R "$GITHUB_REPOSITORY"
+          echo "release_id=$(gh release view "$VERSION" --json databaseId -q .databaseId -R "$GITHUB_REPOSITORY")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notes
+          path: notes.md
+
+  build:
+    needs: draft
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-22.04 # older glibc: the AppImage also runs on older distros
+            bundles: deb,appimage
+          - os: windows-latest
+            bundles: nsis
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Linux system packages
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
@@ -43,46 +89,63 @@ jobs:
 
       - run: npm ci
 
-      - name: Release notes from CHANGELOG.md
-        run: |
-          ver="${VERSION#v}"
-          awk -v v="$ver" '
-            $0 ~ "^## \\[" v "\\]" { on = 1; next }
-            on && /^## \[/ { exit }
-            on { print }
-          ' CHANGELOG.md > notes.md
-          if [ ! -s notes.md ]; then echo "::error::CHANGELOG.md has no section for [$ver]"; exit 1; fi
-          # "(LTS)" in the section header marks a long-term-support (stable) release.
-          if grep -E "^## \[$ver\]" CHANGELOG.md | grep -q "LTS"; then
-            echo "RELEASE_TITLE=T-rax $VERSION LTS" >> "$GITHUB_ENV"
-          else
-            echo "RELEASE_TITLE=T-rax $VERSION" >> "$GITHUB_ENV"
-          fi
-          printf '\n---\n**Instalar:** `sudo apt install ./T-rax_%s_amd64.deb` ou baixe o AppImage. Todas as versões: https://github.com/%s/releases\n' "$ver" "$GITHUB_REPOSITORY" >> notes.md
-
-      - name: Build, sign and publish
+      - name: Build, sign and upload to the draft
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: ${{ env.RELEASE_TITLE }}
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: true
-          args: --bundles deb,appimage
+          releaseId: ${{ needs.draft.outputs.release_id }}
+          # latest.json is assembled once in the publish job (parallel jobs would overwrite each other).
+          includeUpdaterJson: false
+          args: --bundles ${{ matrix.bundles }}
 
-      - name: Checksums and fixed-name copies for "latest" links
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: notes
+
+      - name: latest.json, checksums, fixed-name copies, publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ver="${VERSION#v}"
-          cd src-tauri/target/release/bundle
-          cp "deb/T-rax_${ver}_amd64.deb" T-rax_amd64.deb
-          cp "appimage/T-rax_${ver}_amd64.AppImage" T-rax_amd64.AppImage
-          sha256sum "deb/T-rax_${ver}_amd64.deb" "appimage/T-rax_${ver}_amd64.AppImage" | sed 's#  [a-z]*/#  #' > SHA256SUMS.txt
-          cat SHA256SUMS.txt
-          gh release upload "$VERSION" SHA256SUMS.txt T-rax_amd64.deb T-rax_amd64.AppImage --clobber -R "$GITHUB_REPOSITORY"
-          gh release edit "$VERSION" --title "$RELEASE_TITLE" --notes-file "$GITHUB_WORKSPACE/notes.md" -R "$GITHUB_REPOSITORY"
+          deb="T-rax_${ver}_amd64.deb"; app="T-rax_${ver}_amd64.AppImage"; exe="T-rax_${ver}_x64-setup.exe"
+          mkdir assets && cd assets
+          gh release download "$VERSION" -R "$GITHUB_REPOSITORY" -p "$deb" -p "$app" -p "$exe" -p "*.sig"
+          ls -la
+
+          python3 - "$ver" "$GITHUB_REPOSITORY" "$VERSION" <<'PY'
+          import datetime, json, sys
+          ver, repo, tag = sys.argv[1:4]
+          base = f"https://github.com/{repo}/releases/download/{tag}"
+          def entry(name):
+              return {"signature": open(f"{name}.sig").read().strip(), "url": f"{base}/{name}"}
+          app, deb, exe = f"T-rax_{ver}_amd64.AppImage", f"T-rax_{ver}_amd64.deb", f"T-rax_{ver}_x64-setup.exe"
+          notes = open("../notes.md").read().split("\n---\n")[0].strip()
+          doc = {
+              "version": ver,
+              "notes": notes,
+              "pub_date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "platforms": {
+                  "linux-x86_64": entry(app),
+                  "linux-x86_64-appimage": entry(app),
+                  "linux-x86_64-deb": entry(deb),
+                  "windows-x86_64": entry(exe),
+                  "windows-x86_64-nsis": entry(exe),
+              },
+          }
+          json.dump(doc, open("latest.json", "w"), indent=2)
+          PY
+
+          sha256sum "$deb" "$app" "$exe" > SHA256SUMS.txt
+          cp "$deb" T-rax_amd64.deb
+          cp "$app" T-rax_amd64.AppImage
+          cp "$exe" T-rax_x64-setup.exe
+          cat SHA256SUMS.txt latest.json
+          gh release upload "$VERSION" latest.json SHA256SUMS.txt T-rax_amd64.deb T-rax_amd64.AppImage T-rax_x64-setup.exe --clobber -R "$GITHUB_REPOSITORY"
+          gh release edit "$VERSION" --draft=false --latest -R "$GITHUB_REPOSITORY"
