@@ -1,93 +1,113 @@
 <p align="center">
-  <img src="assets/t-rax.png" width="160" alt="T-rax" />
+  <img src="src-tauri/icons/128x128@2x.png" width="128" alt="T-rax" />
 </p>
 
-<h1 align="center">T-rax</h1>
+# T-rax — versão Linux
 
-<p align="center">
-  <b>Terminal, editor, git, agentes de IA e preview web — numa janela só.</b><br/>
-  Leve, rápido e com dentes afiados. 🦖
-</p>
+Código-fonte da versão Linux do T-rax: um workspace de desenvolvimento "terminal-first" com IA,
+feito com Tauri 2 (Rust) + React 19. Para baixar o app pronto, veja a branch `main` ou a página de
+[Releases](https://github.com/vtQuadros/T-rax/releases).
 
-<p align="center">
-  <a href="https://github.com/vtQuadros/T-rax/releases/latest">Downloads</a> ·
-  <a href="#recursos">Recursos</a> ·
-  <a href="#instalação">Instalação</a> ·
-  <a href="#branches">Branches</a>
-</p>
+## Rodando a partir do código
 
----
+Pacotes do sistema (Debian/Ubuntu/Zorin):
 
-## O que é
+```bash
+sudo apt install -y pkg-config libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+```
 
-O **T-rax** é um workspace de desenvolvimento *terminal-first* e *AI-native*: você abre uma pasta e tem
-terminal, editor de código, controle de versão, um agente de IA que lê e altera o projeto (sempre com
-diff para revisar antes) e o preview do seu app rodando, tudo lado a lado.
+Rust (via [rustup](https://rustup.rs)) e Node.js 22+, depois:
 
-O nome é uma brincadeira com o **T-REX** — e uma homenagem ao [Terax](https://terax.app/), projeto
-open source (Apache-2.0) que inspirou este. O T-rax foi reescrito do zero com Tauri 2 (Rust) + React,
-depois de estudar o Terax com a ferramenta de engenharia reversa [REA](https://github.com/morluto/rea)
-e o código aberto dele. Não é afiliado ao Terax.
+```bash
+npm install
+npm run tauri dev
+```
 
-## Downloads
+`npm run dev` sozinho abre só a interface no navegador, com um backend simulado (`src/dev/mockIpc.ts`).
 
-| Sistema | Arquivo | Como instalar |
+## Gerando os pacotes
+
+```bash
+npm run tauri build
+```
+
+Saída em `src-tauri/target/release/bundle/` (`.deb` e `.AppImage`). Para instalar o binário compilado
+só no seu usuário, com ícone e atalho no menu:
+
+```bash
+scripts/install-linux.sh
+```
+
+(`scripts/install-linux.sh --uninstall` remove.)
+
+## Versões
+
+A partir da **1.0.0 (LTS)** o T-rax segue números `MAJOR.MINOR.PATCH`:
+
+| Mudança | Exemplo | Quando |
 | --- | --- | --- |
-| **Linux** — Debian, Ubuntu, Zorin, Mint | [`T-rax_0.1.0_amd64.deb`](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.deb) | `sudo apt install ./T-rax_0.1.0_amd64.deb` |
-| **Linux** — qualquer distro | [`T-rax_0.1.0_amd64.AppImage`](https://github.com/vtQuadros/T-rax/releases/download/v0.1.0/T-rax_0.1.0_amd64.AppImage) | `chmod +x T-rax_0.1.0_amd64.AppImage` e execute |
-| **Windows** | em breve | — |
-| **macOS** | não planejado por enquanto | — |
+| Correção | `1.0.0` → `1.0.1` | só conserta bugs |
+| Recurso novo | `1.0.1` → `1.1.0` | adiciona algo sem quebrar o que existe |
+| Mudança grande | `1.4.2` → `2.0.0` | muda comportamento ou remove algo |
 
-Todas as versões ficam em [Releases](https://github.com/vtQuadros/T-rax/releases).
+Versões **LTS** são as estáveis recomendadas. Para marcar uma versão como LTS, escreva `(LTS)` no título
+da seção dela no `CHANGELOG.md` (ex.: `## [1.2.0] - 2026-12-01 (LTS)`): a release sai como
+"T-rax v1.2.0 LTS" automaticamente.
 
-## Recursos
+## Lançando uma versão
 
-- **Terminal de verdade** — xterm.js com renderização WebGL, várias abas, PTY nativo, links clicáveis.
-- **Editor** — CodeMirror 6 com modo Vim, 8 temas, `Ctrl+S` para salvar e **autocomplete com IA** (Tab aceita).
-- **Explorer** — ícones Catppuccin, navegação por teclado, criar/renomear/apagar pelo menu de contexto.
-- **Busca** — no conteúdo de todo o projeto (texto ou regex, respeita `.gitignore`) e busca de arquivo por nome (`Ctrl+P`).
-- **Git** — stage/unstage/descartar por arquivo **ou por trecho (hunk)**, commit com `Ctrl+Enter`, push,
-  e um **grafo de commits** com branches, merges e tags.
-- **Agente de IA** — lê, procura, propõe edições (cada uma vira um **diff para você aceitar ou rejeitar**),
-  roda comandos (com sua aprovação), mantém um plano de tarefas e cria sub-agentes de pesquisa.
-- **Seus modelos, sua chave** — OpenAI, Anthropic, Groq, OpenRouter, ou **100% local** com LM Studio / Ollama.
-- **Memória por projeto** — um arquivo `TRAX.md` na raiz que o agente lê a cada conversa.
-- **Planos e tarefas** — lista de tarefas compartilhada entre você e o agente.
-- **Snippets** — prompts reutilizáveis chamados com `/nome` no chat.
-- **Preview web** — detecta servidores de dev (Vite, Next, Astro…) no terminal e abre numa aba.
-- **Temas** — 10 paletas, tema do editor independente, temas personalizados (exporta/importa JSON) e
-  imagem de fundo com opacidade e blur.
-- **Leve** — binário de ~8 MB, sem Electron, sem conta, sem telemetria.
-
-## Instalação
-
-### Linux (.deb)
+1. Descreva a versão no `CHANGELOG.md`, numa seção `## [0.3.0] - AAAA-MM-DD`.
+2. Rode:
 
 ```bash
-sudo apt install ./T-rax_0.1.0_amd64.deb
+scripts/release.sh 0.3.0
 ```
 
-Depois procure **T-rax** no menu de aplicativos, ou rode `t-rax` no terminal. Para abrir direto numa
-pasta: `t-rax ~/meu-projeto`.
+O script atualiza o número da versão, faz o commit, cria a tag `v0.3.0` e envia. O GitHub Actions
+(`.github/workflows/release.yml`) compila, assina e publica a release com o `.deb`, o AppImage,
+os checksums e o `latest.json` que o app usa para se atualizar. Cada versão fica na sua página em
+[Releases](https://github.com/vtQuadros/T-rax/releases), então versões antigas continuam disponíveis.
 
-### Linux (AppImage)
+A assinatura usa os secrets `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`; a chave
+pública fica em `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). Sem a chave privada correta, os
+apps instalados recusam a atualização.
 
-```bash
-chmod +x T-rax_0.1.0_amd64.AppImage
+## Estrutura
+
+```
+src/                 Frontend React
+  ai/                provedores (streaming), loop do agente + ferramentas, autocomplete
+  components/        painéis e views (terminal, editor, explorer, git, IA, preview…)
+  lib/               wrappers de IPC, stores (zustand), temas, diff e grafo de commits
+src-tauri/src/       Backend Rust
+  pty.rs             terminais (portable-pty, streaming por Channel)
+  fs.rs              arquivos, busca fuzzy e grep (respeita .gitignore)
+  git.rs             status, diff, stage por hunk, commit, push, log
+  shell.rs           comandos não interativos para o agente (com timeout)
+  ai.rs              proxy de streaming HTTP para os provedores de IA (cancelável)
+docs/analysis.md     como o Terax original foi analisado (REA + código aberto)
 ```
 
-```bash
-./T-rax_0.1.0_amd64.AppImage
-```
+Testes do backend: `cd src-tauri && cargo test`.
 
-### Configurando a IA
+## Atalhos
 
-Abra **Settings** (`Ctrl+,`) → **AI Providers**, escolha um provedor e cole sua chave. Para rodar sem
-internet, use **LM Studio** ou **Ollama** — nada sai da sua máquina.
+| Teclas | Ação |
+| --- | --- |
+| Ctrl+P | Ir para arquivo |
+| Ctrl+Shift+P | Paleta de comandos |
+| Ctrl+Shift+T / Ctrl+Shift+W | Novo terminal / fechar aba |
+| Ctrl+Tab, Ctrl+1…9 | Trocar de aba |
+| Ctrl+Shift+E / F / G / K | Explorer / Busca / Git / Tarefas |
+| Ctrl+B, Ctrl+I | Mostrar/ocultar barra lateral / painel do agente |
+| Ctrl+O, Ctrl+, | Abrir pasta / configurações |
 
-### Janela vazia ao abrir?
+Dentro do terminal só os atalhos com Ctrl+Shift são capturados; os Ctrl simples vão para o shell.
 
-Alguns sistemas têm caches de fontes incompatíveis que travam o WebKitGTK. Rode:
+## Problemas conhecidos
+
+**Janela vazia (cinza) ao abrir.** O WebKitGTK trava se `~/.cache/fontconfig` tiver caches `cache-9`
+que são symlinks para `cache-12` (criados por apps com fontconfig mais novo). Correção:
 
 ```bash
 find ~/.cache/fontconfig -maxdepth 1 -type l -name '*.cache-*' -lname '*.cache-12' -delete
@@ -96,11 +116,3 @@ find ~/.cache/fontconfig -maxdepth 1 -type l -name '*.cache-*' -lname '*.cache-1
 ```bash
 fc-cache -f
 ```
-
-## Branches
-
-| Branch | Conteúdo |
-| --- | --- |
-| `main` | Esta página: apresentação e downloads |
-| [`Linux`](https://github.com/vtQuadros/T-rax/tree/Linux) | Código-fonte da versão Linux (Tauri 2 + React) e instruções de build |
-| [`Windows`](https://github.com/vtQuadros/T-rax/tree/Windows) | Versão Windows — em desenvolvimento |

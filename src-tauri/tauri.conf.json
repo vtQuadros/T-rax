@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "T-rax",
+  "version": "../package.json",
+  "identifier": "dev.vtquadros.t-rax",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "T-rax",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 720,
+        "minHeight": 480,
+        "center": true,
+        "maximized": true
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$HOME/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "appimage",
+      "deb"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "shortDescription": "Terminal-first, AI-native dev workspace",
+    "category": "DeveloperTool",
+    "createUpdaterArtifacts": true
+  },
+  "mainBinaryName": "t-rax",
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYzQkU5NEVCMUYwNkJEREIKUldUYnZRWWY2NVMrWTdqQy9oTWpCbkhuQ1B5dkpwVExDa2M4b2ZFUUMzY3lEWUt1cXRmZWJBZkwK",
+      "endpoints": [
+        "https://github.com/vtQuadros/T-rax/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

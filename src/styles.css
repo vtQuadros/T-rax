@@ -1,0 +1,285 @@
+@import "tailwindcss";
+@import "@xterm/xterm/css/xterm.css";
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-panel: var(--c-panel);
+  --color-elevated: var(--c-elevated);
+  --color-hover: var(--c-hover);
+  --color-border: var(--c-border);
+  --color-fg: var(--c-fg);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-accent-fg: var(--c-accent-fg);
+  --color-red: var(--c-red);
+  --color-green: var(--c-green);
+  --color-yellow: var(--c-yellow);
+  --color-blue: var(--c-blue);
+  --color-magenta: var(--c-magenta);
+  --color-cyan: var(--c-cyan);
+  --color-border-strong: var(--c-border-strong);
+  --color-fg-soft: var(--c-fg-soft);
+  --color-dim: var(--c-dim);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-red-soft: var(--c-red-soft);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+:root {
+  --c-bg: #0b0d0c;
+  --c-panel: #0e1110;
+  --c-elevated: #121614;
+  --c-hover: #1a1f1c;
+  --c-border: #1e2421;
+  --c-border-strong: #252b28;
+  --c-fg: #e7ece9;
+  --c-fg-soft: #c9d1cc;
+  --c-muted: #8b948f;
+  --c-dim: #7a837e;
+  --c-accent: #4ade80;
+  --c-accent-fg: #052e16;
+  --c-accent-soft: #4ade801f;
+  --c-red: #f87171;
+  --c-red-soft: #f871711a;
+  --c-green: #4ade80;
+  --c-yellow: #fbbf24;
+  --c-blue: #60a5fa;
+  --c-magenta: #c084fc;
+  --c-cyan: #5eead4;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+input,
+textarea,
+.cm-editor,
+.selectable {
+  user-select: text;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-hover) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-hover);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.xterm {
+  padding: 16px 0 0 20px;
+  height: 100%;
+}
+.xterm .xterm-viewport {
+  background: transparent !important;
+}
+
+.cm-editor {
+  height: 100%;
+  font-size: var(--editor-font-size, 13px);
+}
+.cm-editor .cm-scroller {
+  font-family: var(--font-mono);
+}
+.cm-ghost {
+  opacity: 0.45;
+  font-style: italic;
+}
+
+.prose-ai p {
+  margin: 0.4em 0;
+}
+.prose-ai pre {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  font-size: 12px;
+  margin: 0.5em 0;
+}
+.prose-ai code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.prose-ai :not(pre) > code {
+  background: var(--c-elevated);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.prose-ai ul,
+.prose-ai ol {
+  padding-left: 1.2em;
+  margin: 0.4em 0;
+}
+.prose-ai ul {
+  list-style: disc;
+}
+.prose-ai ol {
+  list-style: decimal;
+}
+.prose-ai h1,
+.prose-ai h2,
+.prose-ai h3 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+.prose-ai a {
+  color: var(--c-blue);
+  text-decoration: underline;
+}
+
+[data-separator] {
+  background: var(--c-border);
+  width: 1px;
+  transition: background-color 0.2s ease;
+}
+[data-separator="hover"],
+[data-separator="active"] {
+  background: var(--c-accent);
+}
+
+[cmdk-item][data-selected="true"] {
+  background: var(--c-hover);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@layer base {
+/* Interaction: colour-only motion, a visible focus ring, nothing when reduced. */
+button,
+a,
+[role="tab"],
+.row {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline-offset: 0;
+}
+::selection {
+  background: var(--c-accent-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+}
+
+/* Section label: mono, small caps-like tracking (panel headers, group titles). */
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Transparent pixels in the image viewer. */
+.checkerboard {
+  background-color: #1a1f1c;
+  background-image:
+    linear-gradient(45deg, #232926 25%, transparent 25%),
+    linear-gradient(-45deg, #232926 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #232926 75%),
+    linear-gradient(-45deg, transparent 75%, #232926 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+/* pdf.js text layer: invisible, selectable text positioned over the canvas
+   (subset of pdfjs-dist/web/pdf_viewer.css). */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  transform-origin: 0 0;
+  forced-color-adjust: none;
+  z-index: 0;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent {
+  display: contents;
+}
+.textLayer ::selection {
+  background: rgb(96 165 250 / 0.35);
+  color: transparent;
+}
+.textLayer br::selection {
+  background: transparent;
+}
+::highlight(pdf-search) {
+  background-color: rgb(251 191 36 / 0.45);
+  color: transparent;
+}
