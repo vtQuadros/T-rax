@@ -31,13 +31,13 @@ e o código aberto dele. Não é afiliado ao Terax.
 
 ## Downloads
 
-**Versão mais recente: v1.0.0 LTS** (os links sempre apontam para a última versão lançada):
+**Versão mais recente: v1.1.0** (os links sempre apontam para a última versão lançada). Versão estável recomendada: **v1.0.0 LTS**.
 
 | Sistema | Arquivo | Como instalar |
 | --- | --- | --- |
 | **Linux** — Debian, Ubuntu, Zorin, Mint | [`T-rax_amd64.deb`](https://github.com/vtQuadros/T-rax/releases/latest/download/T-rax_amd64.deb) | `sudo apt install ./T-rax_amd64.deb` |
 | **Linux** — qualquer distro | [`T-rax_amd64.AppImage`](https://github.com/vtQuadros/T-rax/releases/latest/download/T-rax_amd64.AppImage) | `chmod +x T-rax_amd64.AppImage` e execute |
-| **Windows** | em breve ([#3](https://github.com/vtQuadros/T-rax/issues/3)) | — |
+| **Windows** 10/11 | [`T-rax_x64-setup.exe`](https://github.com/vtQuadros/T-rax/releases/latest/download/T-rax_x64-setup.exe) | execute o instalador (não pede administrador) |
 | **macOS** | não planejado por enquanto | — |
 
 ### Todas as versões
@@ -47,7 +47,8 @@ Dá para baixar e instalar qualquer uma, inclusive voltar para uma anterior.
 
 | Versão | Data | Destaques | Downloads |
 | --- | --- | --- | --- |
-| [**v1.0.0 LTS**](https://github.com/vtQuadros/T-rax/releases/tag/v1.0.0) | 20/10/2026 | Primeira versão estável: agente minimizável, arrastar arquivos, anexos no agente | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.AppImage) |
+| [**v1.1.0**](https://github.com/vtQuadros/T-rax/releases/tag/v1.1.0) | 21/10/2026 | Versão para Windows (PowerShell, explorer seguindo o `cd`, instalador `.exe`) | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v1.1.0/T-rax_1.1.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v1.1.0/T-rax_1.1.0_amd64.AppImage) · [.exe](https://github.com/vtQuadros/T-rax/releases/download/v1.1.0/T-rax_1.1.0_x64-setup.exe) |
+| [v1.0.0 LTS](https://github.com/vtQuadros/T-rax/releases/tag/v1.0.0) | 20/10/2026 | Primeira versão estável: agente minimizável, arrastar arquivos, anexos no agente | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v1.0.0/T-rax_1.0.0_amd64.AppImage) |
 | [v0.2.2](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.2) | 20/10/2026 | Imagens e PDFs, explorer segue o terminal, abas renomeáveis | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.2/T-rax_0.2.2_amd64.AppImage) |
 | [v0.2.1](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.1) | 20/10/2026 | Explorer só texto como no design, janela abre maximizada | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.1/T-rax_0.2.1_amd64.AppImage) |
 | [v0.2.0](https://github.com/vtQuadros/T-rax/releases/tag/v0.2.0) | 19/10/2026 | Atualização automática, visual novo minimalista | [.deb](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.deb) · [AppImage](https://github.com/vtQuadros/T-rax/releases/download/v0.2.0/T-rax_0.2.0_amd64.AppImage) |
@@ -101,11 +102,18 @@ chmod +x T-rax_amd64.AppImage
 ./T-rax_amd64.AppImage
 ```
 
+### Windows
+
+Baixe e execute o `T-rax_x64-setup.exe`. Como o instalador ainda não tem certificado de assinatura de
+código, o Windows pode mostrar *"O Windows protegeu o computador"*: clique em **Mais informações →
+Executar assim mesmo**. A instalação é só para o seu usuário (não pede administrador) e cria o atalho no
+Menu Iniciar. O terminal usa o PowerShell 7, se instalado, ou o Windows PowerShell.
+
 ### Atualizações
 
 A partir da v0.2.0, o T-rax verifica novas versões ao abrir e a cada 6 horas:
 
-- **AppImage:** aparece um aviso com **Update & restart**. O app baixa a versão nova, confere a
+- **AppImage e Windows:** aparece um aviso com **Update & restart**. O app baixa a versão nova, confere a
   assinatura digital e se substitui sozinho.
 - **.deb:** aparece um aviso com o link do pacote novo. Instale por cima do atual com
   `sudo apt install ./T-rax_X.Y.Z_amd64.deb`; suas configurações são mantidas.
@@ -136,5 +144,5 @@ fc-cache -f
 | Branch | Conteúdo |
 | --- | --- |
 | `main` | Esta página: apresentação e downloads |
-| [`Linux`](https://github.com/vtQuadros/T-rax/tree/Linux) | Código-fonte da versão Linux (Tauri 2 + React) e instruções de build |
-| [`Windows`](https://github.com/vtQuadros/T-rax/tree/Windows) | Versão Windows — em desenvolvimento |
+| [`Linux`](https://github.com/vtQuadros/T-rax/tree/Linux) | Código-fonte (Tauri 2 + React), o mesmo para Linux e Windows, e instruções de build |
+| [`Windows`](https://github.com/vtQuadros/T-rax/tree/Windows) | Espelho do mesmo código, mantido em sincronia com a `Linux` |
